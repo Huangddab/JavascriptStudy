@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>克隆</title>
+</head>
+
+<body>
+    <button onclick="runDemo()">运行示例</button>
+    <!-- 克隆只是创建这个对象的过程和手段 -->
+    <!-- 所有的数据都是对象。  -->
+    <!-- 要得到一个对象，不是通过实例化类，而是找到一个对象作为原型并克隆它。 -->
+    <!-- 对象会记住它的原型 -->
+    <!-- 如果对象无法响应某个请求，它会把这个请求委托给它自己的原型。 -->
+    <script>
+        var Plane = function () {
+            this.blood = 100;
+            this.attackLevel = 1;
+            this.defenseLevel = 1;
+        }
+
+        var plane = new Plane();
+        plane.blood = 500;
+        plane.attackLevel = 10;
+        plane.defenseLevel = 7;
+
+        var clonePlane = Object.create(plane)
+        function runDemo() {
+            console.log('clonePlane', clonePlane);
+            console.log('Plane', Plane);
+        }
+    </script>
+</body>
+
+</html>

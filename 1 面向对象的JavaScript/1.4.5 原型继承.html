@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript的原型继承</title>
+
+</head>
+
+<body>
+    <button onclick="runDemo1()">运行示例1</button>
+    <button onclick="runDemo2()">运行示例2</button>
+    <button onclick="runDemo3()">运行示例3</button>
+    <!-- JavaScript 也同样遵守这些原型编程的基本规则。 
+         所有的数据都是对象。 
+         要得到一个对象，不是通过实例化类，而是找到一个对象作为原型并克隆它。 
+         对象会记住它的原型。 
+         如果对象无法响应某个请求，它会把这个请求委托给它自己的原型。 -->
+    <script>
+        // 所有的数据都是对象。每个对象实际上都是 Object.prototype对象克隆出来的
+        var obj1 = {}
+        var obj2 = new Object()
+
+        function runDemo1() {
+            console.log("1:", Object.getPrototypeOf(obj1) === Object.prototype); //1: true
+            console.log("2:", Object.getPrototypeOf(obj2) === Object.prototype); //2: true
+        }
+
+
+        //  要得到一个对象，不是通过实例化类，而是找到一个对象作为原型并克隆它。 
+        function Person(name) {
+            this.name = name;
+        }
+        Person.prototype.getName = function () {
+            return this.name;
+        }
+        var a = new Person('sven'); // 这并不是类 而是函数构造器
+        function runDemo2() {
+            console.log(a.name);
+            console.log(a.getName());
+            console.log(Object.getPrototypeOf(a) === Person.prototype);
+        }
+        // 对象会记住他的原型
+        var b = new Object()
+        function runDemo3() {
+            console.log(b.__proto__ === Object.prototype);
+            // __proto__就是对象跟“对象构造器的原型”联系起来的纽带
+        }
+        // 如果对象无法响应某个请求，它会把这个请求委托给它的构造器的原型
+        var obj = { name: "huang" };
+        var A = function () { };
+        A.prototype = obj;
+
+        var a = new A();
+        function runDemo4() {
+            console.log(a.name);
+            // 1 先找a的所有属性，找不到name
+            // 2 查找name的请求被委托给对象a的构造器原型，它被 a.__proto__ 记录着并且 
+            // 指向 A.prototype，而 A.prototype 被设置为对象 obj。
+            // 3 在对象 obj 中找到了 name 属性，并返回它的值。
+        }
+
+
+    </script>
+</body>
+
+</html>
