@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript示例</title>
+</head>
+
+<body>
+    <h1>多态在面向对象程序设计中的作用</h1>
+    <button onclick="runDemo()">运行示例</button>
+
+    <script>
+        var googleMap = {
+            show: function () {
+                console.log('开始渲染谷歌地图');
+            }
+        }
+        // 加入百度地图
+        var baiduMap = {
+            show: function () {
+                console.log('开始渲染百度地图');
+            }
+        }
+        // var renderMap = function (type) {
+        //     // googleMap.show();
+        //     if (type === 'google') {
+        //         googleMap.show();
+        //     } else if(type === 'baidu'){
+        //         baiduMap.show();
+        //     }
+        //     // 比较麻烦
+        // }
+        // 把公共的提取出来
+        var renderMap = function (map) {
+            if (map.show instanceof Function) {
+                map.show();
+            }
+        }
+
+        function runDemo() {
+            // renderMap();
+            renderMap(googleMap);
+            renderMap(baiduMap);
+        }
+    </script>
+</body>
+
+</html>

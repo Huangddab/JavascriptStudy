@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript示例</title>
+</head>
+
+<body>
+    <h1>多态示例</h1>
+    <button onclick="runDemo()">运行示例</button>
+    <button onclick="runDemo2()">使用原型方法实现多态</button>
+
+    <script>
+
+        // 主人发出叫的指令，鸡和鸭都发出叫声
+        var makeSound = function (animal) {
+            // 检查对象类型的表达式。它的作用是判断 animal 是否是 Duck 构造函数创建的实例。
+            if (animal instanceof Duck) {
+                console.log('嘎嘎嘎');
+            } else if (animal instanceof Chicken) {
+                console.log('咯咯咯');
+            }
+        }
+
+        var Duck = function () { }
+        var Chicken = function () { }
+
+        // 调用函数
+        function runDemo() {
+            makeSound(new Duck())
+            makeSound(new Chicken())
+        }
+        // 同一个接口（makeSound 函数）可以根据传入的对象类型（Duck 或 Chicken）执行不同的行为。
+
+        function runDemo() {
+            makeSound(new Duck());    // 输出：嘎嘎嘎
+            makeSound(new Chicken()); // 输出：咯咯咯
+        }
+
+
+        // 使用原型方法实现多态
+        var Duck2 = function () { }
+        Duck2.prototype.sound = function () {
+            console.log('嘎嘎嘎');
+        };
+
+        var Chicken2 = function () { }
+        Chicken2.prototype.sound = function () {
+            console.log('咯咯咯');
+        };
+
+        var Dog = function () { }
+        Dog.prototype.sound = function () {
+            console.log('汪汪汪');
+        }
+
+        var makeSound2 = function (animal) {
+            animal.sound();
+        };
+        // 这样如果增加一个动物 只要简单的追加就可以实现
+
+        function runDemo2() {
+            makeSound2(new Duck2());    // 输出：嘎嘎嘎
+            makeSound2(new Chicken2()); // 输出：咯咯咯
+            makeSound2(new Dog()); // 输出：汪汪汪
+        }
+    </script>
+</body>
+
+</html>

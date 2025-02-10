@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript示例</title>
+</head>
+<body>
+    <h1>合唱团示例</h1>
+    <button onclick="runDemo()">运行示例</button>
+
+    <script>
+        var duck = {
+            duckSingsing: function() {
+                console.log('嘎嘎嘎嘎');
+            }
+        };
+
+        var chicken = {
+            duckSingsing: function() {
+                console.log('嘎嘎嘎嘎');
+            }
+        };
+
+        var choir = []; // 合唱团
+
+        var joinChoir = function(animal) {
+            if (animal && typeof animal.duckSingsing === 'function') {
+                choir.push(animal);
+                console.log('欢迎加入合唱团，人数：', choir.length);
+            }
+        };
+
+        // 调用函数
+        function runDemo() {
+            joinChoir(duck);   // 鸭子加入合唱团
+            joinChoir(chicken); // 鸡加入合唱团
+            console.log('合唱团成员：', choir);
+        }
+    </script>
+</body>
+</html>
