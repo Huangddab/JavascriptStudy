@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>this</title>
+</head>
+
+<body>
+    <button onclick="runDemo1()">示例1</button>
+    <button onclick="runDemo2()">示例2</button>
+    <button onclick="runDemo3()">示例3</button>
+    <div id="div1">我是一个div</div>
+    <!-- this指向 -->
+    <script>
+        // 1 作为对象的方法调用
+        var obj = {
+            a: 1,
+            getA: function () {
+                alert(this === obj);
+                alert(this.a);
+            }
+        }
+        function runDemo1() {
+            obj.getA();
+            // true
+            // 1
+        }
+        // 2 作为普通函数调用
+        window.name = 'globalName';
+        var getName = function () {
+            return this.name;
+        }
+        // 或者
+        var myObject = {
+            name: 'sven',
+            getName: function () {
+                return this.name;
+            }
+        }
+        var myGetName = myObject.getName;
+        function runDemo2() {
+            console.log(getName()); // globalName
+            console.log(myGetName()); // globalName
+        }
+        // 3 构造器调用：构造器里的 this 就指向返回的这个对象
+        var MyClass = function () {
+            this.name = 'xlass';
+        }
+        var MyClass2 = function () {
+            this.name = '2xlss';
+            return {
+                name: '22'
+            }
+            // 构造器中显式的返回一个object，那么最终会返回这个对象
+            // 如果构造器不显式地返回任何数据，或者是返回一个非对象类型的数据，就不会造成上述问题
+        }
+        var obj = new MyClass();
+        var obj2 = new MyClass2();
+        function runDemo3() {
+            alert(obj.name); // xlass
+            alert(obj2.name); // 22
+        }
+
+
+        // 4. Function.prototype.call 或 Function.prototype.apply 调用
+        // 可以动态地改变传入函数的 this：
+        var getId = document.getElementById;
+        getId('div1')
+
+    </script>
+</body>
+
+</html>
