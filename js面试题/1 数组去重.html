@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数组去重</title>
+</head>
+
+<body>
+    <button onclick="runDemo1()">运行示例1</button>
+    <button onclick="runDemo2()">运行示例2</button>
+    <button onclick="runDemo3()">运行示例3</button>
+    <script>
+        const array = [1, 2, 2, 3, 5, 7, 98, 4, 2, 1, 3, 4]
+        // 1 使用set
+        function uniqueArray(arr) {
+            return [...new Set(arr)]
+        }
+        const a = uniqueArray(array)
+        function runDemo1() {
+            console.log(a);
+        }
+        // 2 使用filter
+        function uniqueArray2(arr) {
+            return arr.filter((item, index) => {
+                console.log('arr.indexOf(item)', arr.indexOf(item), index);
+                return arr.indexOf(item) === index;
+                // arr.indexOf返回第一次出现的下标
+            })
+        }
+        function runDemo2() {
+            const b = uniqueArray2(array)
+            console.log(b);
+        }
+        // 3 使用reduce 
+        function uniqueArray(arr) {
+            return arr.reduce((accumulator, current) => {
+                if (!accumulator.includes(current)) {
+                    accumulator.push(current);
+                }
+                return accumulator;
+            }, []);
+        }
+        function runDemo3() {
+            const unique = uniqueArray(array);
+            console.log(unique); // 输出: [1, 2, 3, 4]
+        }
+
+    </script>
+</body>
+
+</html>
