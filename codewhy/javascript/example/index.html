@@ -1,273 +1,212 @@
+<!-- 
+ 
+
+
+
+
+
+-->
+
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1024,height=600,user-scalable=no">
-    <title>TRIDETECT Pro 三合一气体监测系统</title>
+    <title>英宝硕生物化学监测系统</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @keyframes dataGlow {
-            0% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-            100% { opacity: 0.8; transform: scale(1); }
+        @keyframes glow {
+            0% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px #3b82f6;
+            }
+
+            100% {
+                opacity: 0.8;
+            }
         }
-        @keyframes scanLine {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(200%); }
+
+        .status-glow {
+            animation: glow 1.5s ease-in-out infinite;
         }
-        .data-update {
-            transition: all 0.3s ease;
-        }
-        .scan-beam::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, 
-                rgba(14, 165, 233, 0) 0%,
-                rgba(14, 165, 233, 0.15) 50%,
-                rgba(14, 165, 233, 0) 100%);
-            animation: scanLine 3s linear infinite;
+
+        .gauge-pointer {
+            transform-origin: 50% 90%;
+            transition: transform 0.5s ease-out;
         }
     </style>
 </head>
-<body class="h-[600px] w-[1024px] bg-gray-900 text-gray-100 overflow-hidden font-['Roboto']">
-    <!-- 主页面 -->
-    <div id="mainPage" class="h-full flex flex-col p-4 space-y-3">
-        <!-- 状态栏 -->
-        <div class="relative h-12 bg-gray-800/50 rounded-lg scan-beam">
-            <div class="absolute inset-0 backdrop-blur-sm"></div>
-            <div class="relative flex justify-between items-center h-full px-4">
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2 text-green-400">
-                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                        <span>实时监测模式</span>
-                    </div>
-                    <div class="text-sm text-gray-400">
-                        <span>最后更新：</span>
-                        <span id="updateTime">14:30:45</span>
-                    </div>
+
+<body class="bg-slate-900 text-white" style="width: 1024px; height: 600px;">
+
+    <div class="h-full flex flex-col p-4 space-y-4">
+        <div class="flex justify-between items-center bg-slate-800 p-3 rounded-lg">
+            <div class="flex space-x-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-biohazard text-red-400"></i>
+                    <span id="system-status" class="font-bold status-glow">检测中</span>
                 </div>
-                <button onclick="switchPage('settings')" class="p-2 hover:bg-gray-700/30 rounded-lg transition-colors">
-                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-battery-three-quarters text-green-400"></i>
+                    <span>电源: 正常</span>
+                </div>
+            </div>
+            <div class="flex space-x-6">
+                <div id="current-time" class="font-mono">2023-07-20 14:30:00</div>
+                <button class="px-3 py-1 bg-blue-600 rounded hover:bg-blue-500">
+                    <i class="fas fa-cog"></i> 设置
                 </button>
             </div>
         </div>
 
-        <!-- 核心数据区 -->
-        <div class="flex-1 grid grid-cols-12 gap-4">
-            <!-- 环境参数 -->
-            <div class="col-span-3 bg-gray-800/50 rounded-xl p-4">
-                <h2 class="text-xl font-bold text-cyan-400 border-b border-cyan-400/30 pb-2 mb-4">环境态势</h2>
-                <div class="space-y-3">
-                    <div class="data-card bg-gray-700/30 p-3 rounded-lg hover:scale-[1.01] transition-transform">
-                        <div class="flex justify-between text-sm text-gray-400 mb-1">
-                            <span>温度</span>
-                            <span>℃</span>
+        <div class="flex-1 grid grid-cols-3 gap-4">
+            <div class="bg-slate-800 rounded-xl p-4 relative">
+                <h2 class="text-xl font-bold mb-4 border-b border-blue-500 pb-2">
+                    <i class="fas fa-flask mr-2 text-blue-400"></i>化学监测
+                </h2>
+                <div class="flex justify-center mb-4">
+                    <div class="relative w-32 h-32">
+                        <svg viewBox="0 0 100 100" class="absolute">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#1e3a8a" stroke-width="8" />
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#3b82f6" stroke-width="8"
+                                stroke-dasharray="282.743" stroke-dashoffset="56.549" />
+                            <path class="gauge-pointer" d="M50 20 L52 15 L48 15 Z" fill="#fff"
+                                style="transform: rotate(45deg)" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pt-6">
+                            <div class="text-3xl font-bold" id="chem-value">47.3</div>
+                            <div class="text-sm text-slate-400">ppm</div>
                         </div>
-                        <div id="temp" class="text-3xl font-semibold text-cyan-400 data-update">23.7</div>
                     </div>
-                    <div class="data-card bg-gray-700/30 p-3 rounded-lg hover:scale-[1.01] transition-transform">
-                        <div class="flex justify-between text-sm text-gray-400 mb-1">
-                            <span>湿度</span>
-                            <span>%RH</span>
-                        </div>
-                        <div id="hum" class="text-3xl font-semibold text-purple-400 data-update">57.6</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div><span class="text-slate-400">泵速:</span> <span id="pump-rpm">2280</span> RPM</div>
+                    <div><span class="text-slate-400">流量:</span> <span id="pump-flr">547</span> mL/min</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h2 class="text-xl font-bold mb-4 border-b border-green-500 pb-2">
+                    <i class="fas fa-dna mr-2 text-green-400"></i>生物监测
+                </h2>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="p-3 bg-slate-700 rounded-lg">
+                        <div class="text-sm text-slate-400 mb-1">PM2.5</div>
+                        <div class="text-2xl font-bold" id="bio-pm2.5">49</div>
                     </div>
-                    <div class="data-card bg-gray-700/30 p-3 rounded-lg hover:scale-[1.01] transition-transform">
-                        <div class="flex justify-between text-sm text-gray-400 mb-1">
-                            <span>气压</span>
-                            <span>hPa</span>
+                    <div class="p-3 bg-slate-700 rounded-lg">
+                        <div class="text-sm text-slate-400 mb-1">PM10</div>
+                        <div class="text-2xl font-bold" id="bio-pm10">50</div>
+                    </div>
+                </div>
+                <div class="h-24 bg-slate-700 rounded-lg p-2">
+                    <div class="text-sm text-slate-400">气溶胶采样</div>
+                    <div class="flex items-center mt-2">
+                        <div class="flex-1 bg-slate-600 rounded h-2">
+                            <div class="bg-green-400 w-3/4 h-2 rounded transition-all duration-500"></div>
                         </div>
-                        <div id="atm" class="text-3xl font-semibold text-blue-400 data-update">-22.1</div>
+                        <span class="ml-2">1890 L/h</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 核心仪表 -->
-            <div class="col-span-6 bg-gray-800/50 rounded-xl p-4">
-                <div class="grid grid-rows-2 gap-4 h-full">
-                    <!-- 空气质量 -->
-                    <div class="bg-gradient-to-br from-cyan-900/30 to-cyan-400/10 rounded-xl p-4 relative">
-                        <h3 class="text-lg font-semibold text-cyan-300 mb-4">空气品质指数</h3>
-                        <div class="flex items-center justify-center h-24">
-                            <div id="aqi" class="text-5xl font-bold text-cyan-400 data-update">85</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 mt-4">
-                            <div class="text-center p-2 bg-gray-700/30 rounded">
-                                <div class="text-xs text-cyan-300">PM2.5</div>
-                                <div id="pm25" class="text-xl text-cyan-200 data-update">50</div>
-                            </div>
-                            <div class="text-center p-2 bg-gray-700/30 rounded">
-                                <div class="text-xs text-cyan-300">CO₂</div>
-                                <div id="co2" class="text-xl text-cyan-200 data-update">511</div>
-                            </div>
-                            <div class="text-center p-2 bg-gray-700/30 rounded">
-                                <div class="text-xs text-cyan-300">TVOC</div>
-                                <div id="tvoc" class="text-xl text-cyan-200 data-update">0.23</div>
-                            </div>
-                        </div>
+            <div class="bg-slate-800 rounded-xl p-4">
+                <h2 class="text-xl font-bold mb-4 border-b border-purple-500 pb-2">
+                    <i class="fas fa-cloud mr-2 text-purple-400"></i>环境监测
+                </h2>
+                <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">温度</div>
+                        <div class="text-xl font-bold" id="env-temp">30.3℃</div>
                     </div>
-
-                    <!-- 生物监测 -->
-                    <div class="bg-gradient-to-br from-purple-900/30 to-purple-400/10 rounded-xl p-4">
-                        <h3 class="text-lg font-semibold text-purple-300 mb-4">生物气溶胶监测</h3>
-                        <div class="grid grid-cols-4 gap-4">
-                            <div class="text-center">
-                                <div class="text-xs text-purple-300">0.3µm</div>
-                                <div id="pm03" class="text-xl text-purple-400 data-update">2252</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-purple-300">1.0µm</div>
-                                <div id="pm10" class="text-xl text-purple-400 data-update">1008</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-purple-300">5.0µm</div>
-                                <div id="pm50" class="text-xl text-purple-400 data-update">201</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-purple-300">微生物</div>
-                                <div id="flu" class="text-xl text-purple-400 data-update">0</div>
-                            </div>
-                        </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">湿度</div>
+                        <div class="text-xl font-bold" id="env-hum">58.2%</div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 系统健康 -->
-            <div class="col-span-3 bg-gray-800/50 rounded-xl p-4">
-                <h2 class="text-xl font-bold text-green-400 border-b border-green-400/30 pb-2 mb-4">系统健康度</h2>
-                <div class="space-y-3">
-                    <div class="bg-gray-700/30 p-3 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-400">泵转速</span>
-                            <div id="pump" class="text-lg font-semibold text-green-400 data-update">2280 RPM</div>
-                        </div>
-                        <div class="h-1 bg-gray-600/30 rounded-full">
-                            <div class="h-full bg-green-400 rounded-full transition-all duration-500" style="width: 75%"></div>
-                        </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">CO₂</div>
+                        <div class="text-xl font-bold" id="env-co2">511ppm</div>
                     </div>
-                    <div class="bg-gray-700/30 p-3 rounded-lg">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400">传感器阵列</span>
-                            <div class="flex space-x-1">
-                                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                                <div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div>
-                                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                            </div>
-                        </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">噪音</div>
+                        <div class="text-xl font-bold" id="env-temp">30.3℃</div>
                     </div>
-                    <div class="bg-gray-700/30 p-3 rounded-lg">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400">设备温度</span>
-                            <div id="devTemp" class="text-lg font-semibold text-blue-400 data-update">28.1℃</div>
-                        </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">照度</div>
+                        <div class="text-xl font-bold" id="env-hum">58.2%</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">CO₂</div>
+                        <div class="text-xl font-bold" id="env-co2">511ppm</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">CO₂</div>
+                        <div class="text-xl font-bold" id="env-co2">511ppm</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">噪音</div>
+                        <div class="text-xl font-bold" id="env-temp">30.3℃</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">照度</div>
+                        <div class="text-xl font-bold" id="env-hum">58.2%</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">CO₂</div>
+                        <div class="text-xl font-bold" id="env-co2">511ppm</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">照度</div>
+                        <div class="text-xl font-bold" id="env-hum">58.2%</div>
+                    </div>
+                    <div class="p-2 bg-slate-700 rounded">
+                        <div class="text-sm text-slate-400">CO₂</div>
+                        <div class="text-xl font-bold" id="env-co2">511ppm</div>
                     </div>
                 </div>
+                <!-- <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>噪音: <span id="env-db">60.6</span> dB</span>
+                        <span>照度: <span id="env-lux">358</span> Lux</span>
+                    </div>
+                    <div class="h-24 bg-slate-700 rounded-lg p-2">
+                        <div class="text-center pt-6 text-slate-400">空气质量雷达图</div>
+                    </div>
+                </div> -->
             </div>
         </div>
 
-        <!-- 报警栏 -->
-        <div class="h-12 bg-red-900/30 border border-red-400/30 rounded-lg flex items-center px-4">
-            <svg class="w-6 h-6 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <span class="text-red-300 ml-2">当前告警：检测到异常颗粒物浓度 (PM2.5: <span id="alertPm25">50</span>)</span>
-        </div>
-    </div>
-
-    <!-- 设置页面 -->
-    <div id="settingsPage" class="h-full hidden flex-col bg-gray-900 p-4 space-y-4">
-        <div class="flex justify-between items-center h-12">
-            <button onclick="switchPage('main')" class="p-2 hover:bg-gray-700/30 rounded-lg">
-                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-            </button>
-            <h2 class="text-xl font-semibold text-blue-400">系统设置</h2>
-            <div class="w-6"></div>
-        </div>
-
-        <div class="flex-1 bg-gray-800/50 rounded-xl p-4 space-y-4">
-            <!-- 设置内容 -->
-            <div class="bg-gray-700/30 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold text-cyan-400 mb-3">传感器校准</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <button class="p-3 bg-gray-600/30 rounded hover:bg-cyan-400/10 transition-colors">
-                        <span class="text-cyan-300">自动校准</span>
-                    </button>
-                    <button class="p-3 bg-gray-600/30 rounded hover:bg-purple-400/10 transition-colors">
-                        <span class="text-purple-300">手动校准</span>
-                    </button>
-                </div>
-            </div>
+        <div id="alert-bar" class="bg-red-600/30 p-3 rounded-lg flex items-center hidden">
+            <i class="fas fa-exclamation-triangle mr-3 animate-pulse"></i>
+            <span class="font-bold">检测到危险物质！</span>
         </div>
     </div>
 
     <script>
-        // 页面切换
-        function switchPage(page) {
-            const main = document.getElementById('mainPage');
-            const settings = document.getElementById('settingsPage');
-            
-            if(page === 'settings') {
-                main.style.display = 'none';
-                settings.style.display = 'flex';
-            } else {
-                settings.style.display = 'none';
-                main.style.display = 'flex';
-            }
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent =
+                now.toLocaleString('zh-CN', {
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
         }
+        setInterval(updateTime, 1000);
 
-        // 模拟实时数据更新
         function updateData() {
-            const data = {
-                Env: { temp: 23.7 + Math.random().toFixed(1), hum: 57.6, atm: -22.1 },
-                PM: { 'pm2.5': 50, 'pa0.3': 2252, 'pa1.0': 1008, 'pa5.0': 201 },
-                CO2: 511, TVOC: 0.23,
-                PUMP: { rpm: 2280 },
-                DevTemp: 28.1
-            };
-
-            // 更新DOM元素
-            document.getElementById('temp').textContent = data.Env.temp;
-            document.getElementById('hum').textContent = data.Env.hum;
-            document.getElementById('atm').textContent = data.Env.atm;
-            document.getElementById('pm25').textContent = data.PM['pm2.5'];
-            document.getElementById('co2').textContent = data.CO2;
-            document.getElementById('tvoc').textContent = data.TVOC;
-            document.getElementById('pm03').textContent = data.PM['pa0.3'];
-            document.getElementById('pm10').textContent = data.PM['pa1.0'];
-            document.getElementById('pm50').textContent = data.PM['pa5.0'];
-            document.getElementById('pump').textContent = data.PUMP.rpm + ' RPM';
-            document.getElementById('devTemp').textContent = data.DevTemp + '℃';
-
-            // 触发更新动画
-            document.querySelectorAll('.data-update').forEach(el => {
-                el.style.animation = 'dataGlow 0.5s ease';
-                setTimeout(() => el.style.animation = '', 500);
-            });
+            const chemValue = document.getElementById('chem-value');
+            chemValue.textContent = (Math.random() * 50).toFixed(1);
         }
-
-        // 初始化
-        setInterval(() => {
-            document.getElementById('updateTime').textContent = 
-                new Date().toLocaleTimeString('zh-CN', { hour12: false });
-            updateData();
-        }, 2000);
+        setInterval(updateData, 3000);
     </script>
 </body>
+
 </html>
-
-
-
-
-
 
 
 <!-- <!DOCTYPE html>
@@ -393,7 +332,7 @@
                         </div>
                     </div>
 
-         
+
                     <div class="bg-gradient-to-br from-purple-900/30 to-purple-400/10 rounded-xl p-4">
                         <h3 class="text-sm text-purple-300 mb-4">生物气溶胶监测</h3>
                         <div class="relative h-32">
@@ -481,4 +420,5 @@
     </div>
 </body>
 
-</html> -->
+</html>
+ -->

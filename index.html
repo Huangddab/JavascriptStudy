@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024,height=600,user-scalable=no">
+    <title>TRIDETECT Pro 三合一气体监测系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes glow {
+            0% {
+                filter: drop-shadow(0 0 2px #0ff);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 6px #0ff);
+            }
+
+            100% {
+                filter: drop-shadow(0 0 2px #0ff);
+            }
+        }
+
+        .sensor-glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .status-dot {
+            box-shadow: 0 0 8px currentColor;
+        }
+    </style>
+</head>
+
+<body class="h-[600px] w-[1024px] bg-gray-900 text-gray-100 overflow-hidden font-mono">
+    <div class="h-full flex flex-col p-4 space-y-3">
+
+        <div class="flex justify-between items-center bg-gray-800/50 px-4 py-2 rounded-lg">
+            <div class="flex space-x-4 items-center">
+                <div class="flex items-center space-x-2 text-cyan-400">
+                    <div class="w-2 h-2 rounded-full bg-current status-dot"></div>
+                    <span>在线监测中</span>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <!-- <span>系统版本：TD-PRO 2.3.1</span>
+                    <span class="mx-2">|</span> -->
+                    <span>最后更新：<span id="timestamp">14:30:45</span></span>
+                </div>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                    </svg>
+                    <span>环境稳定</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>87% 电源</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 grid grid-cols-12 gap-4">
+
+            <div class="col-span-3 bg-gray-800/50 rounded-xl p-4 flex flex-col space-y-4">
+                <h2 class="text-xl font-bold text-cyan-400 border-b border-cyan-400/30 pb-2">化学监测</h2>
+                <div class="space-y-3">
+                    <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>温度</span>
+                            <span>℃</span>
+                        </div>
+                        <div class="text-3xl py-4 text-center font-semibold text-cyan-400">xxx</div>
+                    </div>
+                    <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>温度</span>
+                            <span>℃</span>
+                        </div>
+                        <div class="text-3xl  py-4 text-center font-semibold text-cyan-400">xxx</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-6 bg-gray-800/50 rounded-xl p-2 ">
+                <div class="bg-gradient-to-br from-cyan-900/30 to-cyan-400/10 rounded-xl p-2">
+                    <h3 class="text-sm text-cyan-300 mb-4">微小气候</h3>
+
+                    <div class="grid grid-cols-3 gap-2 h-full  text-gray-400">
+
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <div class="relative h-26">
+                            <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-xl"></div>
+                            <div class="h-full flex flex-col justify-center p-2 items-center">
+                                <div class="text-sm text-cyan-300">温度</div>
+                                <div class="text-2xl py-1 font-bold text-cyan-400">xxx</div>
+                                <div class="text-sm text-cyan-300">℃</div>
+                            </div>
+                        </div>
+                        <!-- <div class="grid grid-cols-3 gap-2 mt-4">
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">PM2.5</div>
+                                <div class="text-lg text-cyan-300">xxx</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">CO₂</div>
+                                <div class="text-lg text-cyan-300">xxx</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">TVOC</div>
+                                <div class="text-lg text-cyan-300">xxx</div>
+                            </div>
+                        </div> -->
+                    </div>
+
+                    <!-- 
+                    <div class="bg-gradient-to-br from-purple-900/30 to-purple-400/10 rounded-xl p-4">
+                        <h3 class="text-sm text-purple-300 mb-4">生物气溶胶监测</h3>
+                        <div class="relative h-32">
+                            <svg class="w-full h-full" viewBox="0 0 100 50">
+                                <path d="M0,25 Q50,40 100,25" stroke="rgba(165, 180, 252, 0.2)" fill="none" />
+                                <path d="M0,25 Q50,10 100,25" stroke="rgba(165, 180, 252, 0.2)" fill="none" />
+                                <circle cx="50" cy="25" r="4" fill="#A5B4FC" />
+                            </svg>
+                            <div class="absolute bottom-2 left-2 text-xs text-purple-300">0.3µm: xxx</div>
+                            <div class="absolute bottom-2 right-2 text-xs text-purple-300">5.0µm: xxx</div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <div class="text-xs text-purple-300">微生物风险指数</div>
+                            <div class="text-xl font-bold text-purple-400">xxx</div>
+                        </div>
+                    </div> -->
+
+                    <!-- 
+                    <div class="col-span-2 bg-gray-800 rounded-xl p-4">
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">PID检测值</div>
+                                <div class="text-2xl font-bold text-green-400">xxx</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">CO浓度</div>
+                                <div class="text-2xl font-bold text-yellow-400">xxx</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">HCHO</div>
+                                <div class="text-2xl font-bold text-red-400">xxx</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">VOCs</div>
+                                <div class="text-2xl font-bold text-blue-400">xxx</div>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
+
+            <div class="col-span-3 bg-gray-800/50 rounded-xl p-4 space-y-4">
+                <h2 class="text-xl font-bold text-green-400 border-b border-green-400/30 pb-2">生物监测</h2>
+                <div class="space-y-3">
+                    <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>生物荧光</span>
+                            <span>PPL</span>
+                        </div>
+                        <div class="text-3xl text-center py-4 font-semibold text-green-400">xxx</div>
+                    </div>
+                    <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>粒子浓度</span>
+                            <span>PPL</span>
+                        </div>
+                        <div class="text-3xl text-center py-4 font-semibold text-green-400">xxx</div>
+                    </div>
+                    <!-- <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-400">泵转速</div>
+                            <div class="text-lg font-semibold text-green-400">xx RPM</div>
+                        </div>
+                        <div class="h-1 bg-green-400/20 mt-2 rounded-full">
+                            <div class="h-full bg-green-400 rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div> -->
+                    <!-- <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-400">风扇流量</div>
+                            <div class="text-lg font-semibold text-blue-400">xxx L/m</div>
+                        </div>
+                        <div class="h-1 bg-blue-400/20 mt-2 rounded-full">
+                            <div class="h-full bg-blue-400 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/30 p-3 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-400">传感器阵列</div>
+                            <div class="flex space-x-1">
+                                <template x-for="i in 5" :key="i">
+                                    <div class="w-2 h-2 rounded-full" :class="{'bg-green-400': MEMS['ch'+(i-1)] > 240, 
+                                                  'bg-yellow-400': MEMS['ch'+(i-1)] <=240}"></div>
+                                </template>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-red-900/30 border border-red-400/30 rounded-lg px-4 py-2 flex items-center space-x-3">
+            <svg class="w-6 h-6 text-red-400 sensor-glow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span class="text-red-300">当前告警：检测到异常颗粒物浓度 (PM2.5: XXX)</span>
+        </div>
+    </div>
+</body>
+
+</html>
