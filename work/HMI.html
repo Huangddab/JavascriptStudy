@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业级多参数监测仪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes scanning {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .scanning-bar {
+            background: linear-gradient(90deg,
+                    rgba(34, 197, 94, 0) 0%,
+                    rgba(34, 197, 94, 1) 50%,
+                    rgba(34, 197, 94, 0) 100%);
+            animation: scanning 2s linear infinite;
+        }
+
+        .breathing {
+            animation: breath 2s ease-in-out infinite;
+        }
+
+        @keyframes breath {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 h-screen flex items-center justify-center">
+    <!-- 主界面 1024×600 -->
+    <div class="w-[1024px] h-[600px] bg-gray-800 rounded-xl shadow-2xl p-6 flex flex-col relative">
+        <!-- 顶部状态栏 -->
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-2 h-2 bg-green-400 rounded-full breathing"></div>
+                <h1 class="text-xl font-bold text-green-400">工业级多参数监测仪</h1>
+            </div>
+            <div class="text-green-400 text-sm">
+                <span id="time">14:35:28</span>
+                <span class="mx-2">|</span>
+                <span>在线监测中</span>
+            </div>
+        </div>
+
+        <!-- 主监测区 -->
+        <div class="flex-1 grid grid-cols-5 gap-6">
+            <!-- 左侧雷达监测图 -->
+            <div class="col-span-2 bg-gray-700 rounded-lg p-4 relative overflow-hidden">
+                <div class="absolute top-0 left-0 right-0 h-1 scanning-bar"></div>
+                <div class="h-full flex flex-col items-center justify-center">
+                    <div class="relative w-48 h-48 rounded-full border-4 border-green-400/30">
+                        <div class="absolute inset-0 rounded-full border-4 border-green-400/10 animate-ping"></div>
+                        <div class="absolute inset-4 rounded-full bg-gradient-to-br from-green-400/10 to-transparent">
+                            <div class="h-full flex flex-col items-center justify-center">
+                                <span class="text-5xl font-bold text-green-400" id="comfortValue">83%</span>
+                                <span class="text-green-400 mt-2">环境舒适度</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-green-400 text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                            <path d="M13 7h-2v6h6v-2h-4z" />
+                        </svg>
+                        <span>实时监测中</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央参数区 -->
+            <div class="col-span-3 bg-gray-700 rounded-lg p-4">
+                <div class="grid grid-cols-3 gap-4 h-full">
+                    <!-- 化学监测 -->
+                    <div class="p-3 bg-gray-600 rounded-lg">
+                        <h3 class="text-green-400 text-lg mb-3">化学监测</h3>
+                        <div class="space-y-2">
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">挥发性有机物</div>
+                                <div class="text-2xl text-green-400">0.7<sub class="text-xs">ppm</sub></div>
+                            </div>
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">一氧化碳</div>
+                                <div class="text-2xl text-green-400">2.8<sub class="text-xs">ppm</sub></div>
+                            </div>
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">硫化氢</div>
+                                <div class="text-2xl text-green-400">0.0<sub class="text-xs">ppm</sub></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 生物监测 -->
+                    <div class="p-3 bg-gray-600 rounded-lg">
+                        <h3 class="text-green-400 text-lg mb-3">生物监测</h3>
+                        <div class="space-y-2">
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">PM2.5</div>
+                                <div class="text-2xl text-green-400">15<sub class="text-xs">μg/m³</sub></div>
+                            </div>
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">微生物浓度</div>
+                                <div class="text-2xl text-green-400">120<sub class="text-xs">CFU</sub></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 微小气候 -->
+                    <div class="p-3 bg-gray-600 rounded-lg">
+                        <h3 class="text-green-400 text-lg mb-3">微小气候</h3>
+                        <div class="space-y-2">
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">温度</div>
+                                <div class="text-2xl text-green-400">24.5<sub class="text-xs">℃</sub></div>
+                            </div>
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">湿度</div>
+                                <div class="text-2xl text-green-400">65<sub class="text-xs">%RH</sub></div>
+                            </div>
+                            <div class="parameter-item">
+                                <div class="text-gray-300 text-sm">气压</div>
+                                <div class="text-2xl text-green-400">101.3<sub class="text-xs">kPa</sub></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部状态条 -->
+        <div class="mt-4 bg-gray-700 rounded-lg p-2 text-green-400 text-sm flex items-center">
+            <svg class="w-4 h-4 mr-2 animate-spin" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                    d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12s4.579 10 10 10z" />
+            </svg>
+            <span>系统运行中：已持续监测</span>
+            <span id="uptime" class="ml-1">0小时28分</span>
+        </div>
+
+        <!-- 报警界面 -->
+        <div id="alarmPanel"
+            class="hidden absolute inset-0 bg-red-600/95 rounded-xl flex flex-col items-center justify-center">
+            <div class="text-white text-center">
+                <svg class="w-24 h-24 mx-auto mb-6 animate-bounce" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 class="text-4xl font-bold mb-4">紧急报警！</h2>
+                <p class="text-2xl" id="alarmDetail">检测到危险气体浓度超标</p>
+                <div class="mt-8 text-xl border-t border-white/30 pt-4">
+                    <p>请立即采取应急措施</p>
+                    <p class="text-sm mt-2">报警时间：<span id="alarmTime">--:--:--</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uptime = 0;
+
+        // 数据更新函数
+        function updateMonitor() {
+            // 更新时间
+            const now = new Date();
+            document.getElementById('time').textContent =
+                now.toLocaleTimeString('zh-CN', { hour12: false });
+
+            // 更新运行时间
+            uptime++;
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            document.getElementById('uptime').textContent =
+                `${hours}小时${minutes}分`;
+
+            // 更新舒适度
+            document.getElementById('comfortValue').textContent =
+                `${80 + Math.floor(Math.random() * 5)}%`;
+
+            // 模拟报警（5%概率）
+            if (Math.random() < 0.05) {
+                showAlarm('检测到硫化氢浓度超标');
+            } else {
+                document.getElementById('alarmPanel').classList.add('hidden');
+            }
+
+            // 更新参数数值
+            document.querySelectorAll('.text-2xl').forEach(item => {
+                const current = parseFloat(item.textContent);
+                const variation = current > 0 ? (Math.random() - 0.5) * 0.3 : 0;
+                item.textContent = (current + variation).toFixed(1);
+            });
+        }
+
+        function showAlarm(message) {
+            const alarmPanel = document.getElementById('alarmPanel');
+            alarmPanel.classList.remove('hidden');
+            document.getElementById('alarmDetail').textContent = message;
+            document.getElementById('alarmTime').textContent =
+                new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        }
+
+        // 每秒更新
+        setInterval(updateMonitor, 1000);
+        updateMonitor();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENBOSO 工业监测仪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 新增Canvas波形动画样式 */
+        @keyframes radar-scan {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-pulse {
+            box-shadow: 0 0 0 12px rgba(52, 211, 153, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 24px rgba(52, 211, 153, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 h-screen flex items-center justify-center">
+    <!-- 主界面容器 -->
+    <div class="w-[1024px] h-[600px] bg-gray-800 rounded-xl shadow-2xl relative overflow-hidden">
+        <!-- Canvas波形层 -->
+        <canvas id="waveCanvas" class="absolute inset-0 w-[1024px] h-[600px] "></canvas>
+
+        <!-- 常态监测界面 -->
+        <div id="normalMode" class="h-full flex flex-col items-center justify-center space-y-12 relative">
+            <!-- 动态雷达图 -->
+            <div class="relative w-96 h-96">
+                <div class="absolute inset-0 bg-gradient-radial from-green-400/10 to-transparent rounded-full 
+                    animate-radar-scan" style="animation: radar-scan 3s linear infinite"></div>
+                <div class="absolute inset-8 border-4 border-green-400/30 rounded-full"></div>
+                <div
+                    class="absolute inset-16 status-pulse bg-green-400/20 rounded-full flex flex-col items-center justify-center">
+                    <span class="text-6xl font-bold text-green-400" id="comfortValue">85%</span>
+                    <span class="text-green-400 mt-4 text-xl">环境舒适度</span>
+                </div>
+            </div>
+
+            <!-- 状态指示 -->
+            <div class="flex items-center space-x-6 text-green-400">
+                <svg class="w-8 h-8 animate-spin" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12s4.579 10 10 10z" />
+                </svg>
+                <div class="text-2xl">
+                    <span>持续监测中 · 已运行</span>
+                    <span id="uptime" class="font-mono ml-2">00:28:15</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 报警界面 -->
+        <div id="alarmMode"
+            class="hidden absolute inset-0 bg-red-600/95 flex flex-col items-center justify-center space-y-10">
+            <div class="animate-pulse text-center">
+                <svg class="w-40 h-40 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 class="text-6xl font-black mt-8 text-white">危险气体报警！</h2>
+                <div class="mt-8 text-3xl space-y-4 text-white">
+                    <p>气体类型：<span id="alarmType" class="font-mono">硫化氢</span></p>
+                    <p>检测浓度：<span id="alarmValue" class="font-mono">458 ppm</span></p>
+                    <p class="text-2xl mt-6">时间：<span id="alarmTime">14:28:32</span></p>
+                </div>
+            </div>
+            <button onclick="clearAlarm()"
+                class="px-12 py-4 bg-white/20 rounded-xl text-2xl text-white hover:bg-white/30 transition-all duration-300">
+                确认报警
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Canvas波形生成器
+        class WaveGenerator {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.width = canvas.width = canvas.offsetWidth;
+                this.height = canvas.height = canvas.offsetHeight;
+                this.waves = [];
+                this.scanLines = [];
+
+                this.initWaves();
+                this.initScanLines();
+                this.animate();
+            }
+
+            initWaves() {
+                // 初始化3层波形
+                for (let i = 0; i < 3; i++) {
+                    this.waves.push({
+                        y: this.height * (0.3 + i * 0.2),
+                        amplitude: 30 + Math.random() * 50,
+                        speed: 0.02 + i * 0.01,
+                        phase: Math.PI * 2 * Math.random(),
+                        alpha: 0.1 + i * 0.04
+                    });
+                }
+            }
+
+            initScanLines() {
+                // 初始化5条扫描线
+                for (let i = 0; i < 5; i++) {
+                    this.scanLines.push({
+                        x: Math.random() * this.width,
+                        position: Math.random(),
+                        speed: 0.005 + Math.random() * 0.01
+                    });
+                }
+            }
+
+            drawWave(wave) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(-100, wave.y);
+                for (let x = -100; x < this.width + 100; x += 10) {
+                    const y = wave.y + Math.sin(x * 0.05 + wave.phase) * wave.amplitude;
+                    this.ctx.lineTo(x, y);
+                }
+                this.ctx.strokeStyle = `rgba(52, 211, 153, ${wave.alpha})`;
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+            }
+
+            drawScanLine(line) {
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.height);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.5, 'rgba(52, 211, 153, 0.15)');
+                gradient.addColorStop(1, 'transparent');
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(line.x, line.position * this.height);
+                this.ctx.lineTo(line.x, line.position * this.height + this.height / 2);
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+
+                // 更新波形
+                this.waves.forEach(wave => {
+                    wave.phase += wave.speed;
+                    this.drawWave(wave);
+                });
+
+                // 更新扫描线
+                this.scanLines.forEach(line => {
+                    line.position = (line.position + line.speed) % 1;
+                    this.drawScanLine(line);
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // 初始化Canvas波形
+        new WaveGenerator(document.getElementById('waveCanvas'));
+
+        // 系统状态管理
+        let uptime = 0;
+        setInterval(() => {
+            uptime++;
+            const h = Math.floor(uptime / 3600).toString().padStart(2, '0');
+            const m = Math.floor((uptime % 3600) / 60).toString().padStart(2, '0');
+            const s = (uptime % 60).toString().padStart(2, '0');
+            document.getElementById('uptime').textContent = `${h}:${m}:${s}`;
+        }, 1000);
+
+        // 报警系统
+        const alarmTypes = [
+            { name: '硫化氢', unit: 'ppm', threshold: 10 },
+            { name: '一氧化碳', unit: 'ppm', threshold: 50 },
+            { name: '挥发性有机物', unit: 'ppb', threshold: 1000 }
+        ];
+
+        function triggerAlarm() {
+            const alarm = alarmTypes[Math.floor(Math.random() * 3)];
+            const value = (alarm.threshold * (1.5 + Math.random())).toFixed(1);
+
+            document.getElementById('alarmType').textContent = alarm.name;
+            document.getElementById('alarmValue').textContent = `${value} ${alarm.unit}`;
+            document.getElementById('alarmTime').textContent =
+                new Date().toLocaleTimeString('zh-CN', { hour12: false });
+
+            document.getElementById('normalMode').classList.add('hidden');
+            document.getElementById('alarmMode').classList.remove('hidden');
+        }
+
+        function clearAlarm() {
+            document.getElementById('normalMode').classList.remove('hidden');
+            document.getElementById('alarmMode').classList.add('hidden');
+        }
+
+        // 报警模拟（2%概率触发）
+        setInterval(() => {
+            if (!document.getElementById('alarmMode').classList.contains('hidden')) return;
+            if (Math.random() < 0.02) triggerAlarm();
+        }, 2000);
+
+        // 环境指数更新
+        setInterval(() => {
+            if (!document.getElementById('alarmMode').classList.contains('hidden')) return;
+            document.getElementById('comfortValue').textContent =
+                `${80 + Math.floor(Math.random() * 6)}%`;
+        }, 3000);
+    </script>
+</body>
+
+</html>

@@ -1,171 +1,288 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENBOSO 工业监测仪</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @keyframes pulse {
-            50% {
-                opacity: 0.5;
-            }
+        .wave-container {
+            background: linear-gradient(90deg, transparent 50%, rgba(34, 120, 94, 0.2) 100%),
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 15px,
+                    rgba(34, 120, 94, 0.15) 15px,
+                    rgba(34, 120, 94, 0.15) 30px);
         }
 
-        @keyframes wave {
+        @keyframes radar-scan {
             0% {
-                transform: translateX(-100%);
+                transform: rotate(0deg);
             }
 
             100% {
-                transform: translateX(200%);
+                transform: rotate(360deg);
             }
+        }
+
+        .status-pulse {
+            box-shadow: 0 0 0 12px rgba(34, 120, 94, 0.15);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(34, 120, 94, 0.3);
+            }
+
+            70% {
+                box-shadow: 0 0 0 24px rgba(34, 120, 94, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 120, 94, 0);
+            }
+        }
+
+        #alarmMode {
+            background: rgba(127, 29, 29, 0.95);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 
-<body class="p-8 bg-gray-100 space-y-8">
+<body class="bg-gray-900 h-screen flex items-center justify-center">
+    <div class="w-[1024px] h-[600px] bg-gray-800 rounded-xl shadow-2xl relative overflow-hidden">
+        <canvas id="waveCanvas" class="absolute inset-0 w-[1024px] h-[600px]"></canvas>
 
-    <!-- 方案1: 实时数据波动指示 -->
-    <div class="space-y-2">
-        <div class="flex justify-between text-sm font-mono">
-            <span class="text-blue-600">📡 Live Monitoring</span>
-            <span class="text-gray-600" id="valueDisplay">0kB/s</span>
+        <!-- 主界面容器 -->
+        <div id="normalMode">
+            <!-- 顶部状态栏 -->
+            <div class="h-16 flex items-center justify-between px-8 border-b border-gray-600 relative z-10">
+                <div class="flex items-center space-x-4">
+                    <div class="w-8 h-8 bg-green-600 flex items-center justify-center rounded-lg">
+                        <span class="font-bold text-gray-900">E</span>
+                    </div>
+                    <div class="text-green-600">
+                        <span class="text-xl font-bold">ENBOSO</span>
+                        <span class="text-sm ml-2">Industrial Monitor</span>
+                    </div>
+                    <div class="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-2 text-green-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span id="uptime">00:00:00</span>
+                    </div>
+                    <div class="flex items-center space-x-2" id="battery">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 7v6h4l5 5V4l-5 5H9z" />
+                        </svg>
+                        <span class="text-green-600">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主监测区 -->
+            <div class="h-[480px] flex flex-col items-center justify-center relative z-10">
+                <div class="relative w-96 h-96">
+                    <div class="absolute inset-0 bg-gradient-radial from-green-600/10 to-transparent rounded-full 
+                        animate-radar-scan" style="animation: radar-scan 3s linear infinite"></div>
+                    <div class="absolute inset-8 border-4 border-green-600/30 rounded-full"></div>
+                    <div
+                        class="absolute inset-16 status-pulse bg-green-600/20 rounded-full flex flex-col items-center justify-center">
+                        <span class="text-6xl font-bold text-green-600" id="comfortValue">85%</span>
+                        <span class="text-green-600 mt-4 text-xl">环境安全指数</span>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex items-center space-x-4 text-green-600 text-xl">
+                    <svg class="w-8 h-8 animate-spin" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M12 22c5.421 0 10-4.579 10-10h-2c0 4.337-3.663 8-8 8s-8-3.663-8-8c0-4.336 3.663-8 8-8V2C6.579 2 2 6.58 2 12s4.579 10 10 10z" />
+                    </svg>
+                    <span>实时监测进行中</span>
+                </div>
+            </div>
         </div>
-        <div class="h-2 bg-gray-200 rounded-full overflow-hidden relative">
-            <div class="absolute inset-0 bg-blue-500/20 animate-pulse"></div>
-            <div class="h-full bg-blue-500 transition-all duration-300 ease-out" id="liveProgress" style="width: 30%">
-                <div class="w-20 h-full bg-white/30 animate-[wave_1.5s_linear_infinite]"></div>
+
+        <!-- 报警界面 -->
+        <div id="alarmMode" class="hidden absolute inset-0 flex items-center justify-center">
+            <div class="w-full max-w-2xl p-8 text-center">
+                <div class="alert-pulse text-red-400 mb-6">
+                    <svg class="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h2 class="text-4xl font-bold text-red-100 mb-6">气体浓度超标报警！</h2>
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="p-4 bg-red-800/50 rounded-lg">
+                        <div class="text-red-200 mb-2">检测值</div>
+                        <div class="text-3xl font-mono text-red-100" id="alertGasValue">--</div>
+                    </div>
+                    <div class="p-4 bg-red-800/50 rounded-lg">
+                        <div class="text-red-200 mb-2">安全阈值</div>
+                        <div class="text-3xl font-mono text-red-100">300ppm</div>
+                    </div>
+                </div>
+                <button onclick="clearAlarm()" class="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl
+                    transition-all font-semibold text-lg hover:scale-105 active:scale-95">
+                    确认报警
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- 方案2: 动态光标扫描 -->
-    <div class="group relative h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-green-400 to-cyan-500 w-full transition-opacity">
-            <div class="absolute top-0 w-1 h-full bg-white/80 animate-[wave_1.2s_linear_infinite]"></div>
-        </div>
-        <div class="absolute -top-1 right-0 text-xs bg-green-100 px-2 py-1 rounded-full 
-              transition-opacity opacity-0 group-hover:opacity-100">
-            Scanning...
-        </div>
-    </div>
-
-    <!-- 方案3: 多状态脉冲指示 -->
-    <div class="flex items-center space-x-4">
-        <div class="relative w-24 h-6 bg-gray-200 rounded-lg overflow-hidden">
-            <div class="absolute inset-0 bg-purple-500/80 animate-pulse"></div>
-            <div class="absolute inset-0 bg-purple-500 w-3/4"></div>
-        </div>
-        <div class="flex items-center space-x-2">
-            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-sm text-gray-600">Active Sensing</span>
-        </div>
-    </div>
-
     <script>
-        // 模拟实时数据更新
-        let fakeData = 30;
-        const progressBar = document.getElementById('liveProgress');
-        const valueDisplay = document.getElementById('valueDisplay');
+        class WaveGenerator {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.resize();
+                this.waves = [];
+                this.scanLines = [];
 
+                this.initWaves();
+                this.initScanLines();
+                this.animate();
+
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            resize() {
+                this.canvas.width = this.canvas.offsetWidth;
+                this.canvas.height = this.canvas.offsetHeight;
+            }
+
+            initWaves() {
+                for (let i = 0; i < 3; i++) {
+                    this.waves.push({
+                        y: this.canvas.height * (0.3 + i * 0.2),
+                        amplitude: 40 + Math.random() * 60,
+                        speed: 0.03 + i * 0.015,
+                        phase: Math.PI * 2 * Math.random(),
+                        alpha: 0.15 + i * 0.05
+                    });
+                }
+            }
+
+            initScanLines() {
+                [200, 800].forEach(x => {
+                    this.scanLines.push({
+                        x,
+                        speed: 0.2 + Math.random() * 0.25,
+                        position: Math.random()
+                    });
+                });
+            }
+
+            drawWave(wave) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(-100, wave.y);
+                for (let x = -100; x < this.canvas.width + 100; x += 10) {
+                    const y = wave.y + Math.sin(x * 0.05 + wave.phase) * wave.amplitude;
+                    this.ctx.lineTo(x, y);
+                }
+                this.ctx.strokeStyle = `rgba(34, 120, 94, ${wave.alpha})`;
+                this.ctx.lineWidth = 1.5;
+                this.ctx.stroke();
+            }
+
+            drawScanLine(line) {
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(0.5, 'rgba(34, 120, 94, 0.25)');
+                gradient.addColorStop(1, 'transparent');
+                this.ctx.beginPath();
+                this.ctx.moveTo(line.x, line.position * this.canvas.height);
+                this.ctx.lineTo(line.x, line.position * this.canvas.height + this.canvas.height / 2);
+                this.ctx.strokeStyle = gradient;
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.waves.forEach(wave => {
+                    wave.phase += wave.speed;
+                    this.drawWave(wave);
+                });
+                this.scanLines.forEach(line => {
+                    line.position = (line.position + line.speed) % 1;
+                    this.drawScanLine(line);
+                });
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // 初始化系统
+        const waveCanvas = new WaveGenerator(document.getElementById('waveCanvas'));
+        let uptime = 0;
+        let batteryLevel = 100;
+        const batteryElement = document.getElementById('battery');
+
+        // 运行时间更新
         setInterval(() => {
-            // 生成波动数据 (-5 ~ +5)
-            fakeData = Math.min(100, Math.max(0, fakeData + (Math.random() * 10 - 5)));
+            uptime++;
+            const h = Math.floor(uptime / 3600).toString().padStart(2, '0');
+            const m = Math.floor((uptime % 3600) / 60).toString().padStart(2, '0');
+            document.getElementById('uptime').textContent = `${h}:${m}`;
+        }, 1000);
 
-            progressBar.style.width = `${fakeData.toFixed(1)}%`;
-            valueDisplay.textContent = `${fakeData.toFixed(1)}%`;
+        // 电池状态更新
+        setInterval(() => {
+            batteryLevel = Math.max(0, batteryLevel - 0.02);
+            const batteryIcon = batteryElement.querySelector('svg');
+            const batteryText = batteryElement.querySelector('span');
+            batteryText.textContent = `${Math.floor(batteryLevel)}%`;
+            batteryIcon.classList.remove('text-red-500', 'text-yellow-500');
+            if (batteryLevel <= 20) {
+                batteryIcon.classList.add('text-red-500');
+            } else if (batteryLevel <= 40) {
+                batteryIcon.classList.add('text-yellow-500');
+            }
+        }, 30000);
 
-            // 根据数值改变颜色
-            const hue = fakeData < 50 ? 210 : 360 - (fakeData * 3.6);
-            progressBar.style.backgroundColor = `hsl(${hue}, 80%, 50%)`;
-        }, 800);
+        // 报警系统
+        const alarmTypes = [
+            { name: '硫化氢', unit: 'ppm', threshold: 10 },
+            { name: '一氧化碳', unit: 'ppm', threshold: 50 },
+            { name: '挥发性有机物', unit: 'ppb', threshold: 1000 }
+        ];
+
+        function triggerAlarm() {
+            const alarm = alarmTypes[Math.floor(Math.random() * 3)];
+            const value = (alarm.threshold * (1.5 + Math.random())).toFixed(1);
+            document.getElementById('alertGasValue').textContent = `${value} ${alarm.unit}`;
+            document.getElementById('normalMode').classList.add('hidden');
+            document.getElementById('alarmMode').classList.remove('hidden');
+        }
+
+        function clearAlarm() {
+            document.getElementById('normalMode').classList.remove('hidden');
+            document.getElementById('alarmMode').classList.add('hidden');
+        }
+
+        // 报警模拟（3%概率触发）
+        setInterval(() => {
+            if (!document.getElementById('alarmMode').classList.contains('hidden')) return;
+            if (Math.random() < 0.03) triggerAlarm();
+        }, 2500);
+
+        // 环境指数更新
+        setInterval(() => {
+            if (!document.getElementById('alarmMode').classList.contains('hidden')) return;
+            document.getElementById('comfortValue').textContent =
+                `${80 + Math.floor(Math.random() * 6)}%`;
+        }, 2800);
     </script>
-
 </body>
 
 </html>
-
-
-
-<!-- <!DOCTYPE html>
-<html>
-
-<head>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes stripes {
-            from {
-                background-position: 40px 0;
-            }
-
-            to {
-                background-position: 0 0;
-            }
-        }
-
-        @keyframes gradient {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        @keyframes step {
-            50% {
-                background-color: #6c5ce7;
-            }
-        }
-    </style>
-</head>
-
-<body class="p-8 bg-gray-100">
-    <div class="w-72 h-6 bg-gray-200 rounded-full overflow-hidden mb-4">
-        <div class="h-full bg-purple-500 relative 
-    bg-[length:40px_40px]
-    bg-gradient-to-r from-purple-500/30 via-white/30 to-purple-500/30
-    animate-[stripes_2s_linear_infinite]" style="width: 60%">
-        </div>
-    </div>
-
-    <div class="w-72 h-3 bg-gray-200 rounded-full mb-4 overflow-hidden">
-        <div class="h-full w-4/5 animate-[gradient_3s_ease_infinite] 
-    bg-gradient-to-r from-pink-500 via-yellow-400 to-purple-500 
-    bg-[length:300%_100%]">
-        </div>
-    </div>
-
-    <div class="w-72 h-4 bg-gray-200 rounded-full mb-4 overflow-hidden">
-        <div class="h-full bg-blue-500 transition-[width] duration-500 ease-out" style="width: 45%">
-        </div>
-    </div>
-
-    <div class="w-12 h-12 border-4 border-gray-300 border-t-purple-500 
-  rounded-full animate-spin mb-4">
-    </div>
-
-    <div class="flex gap-2">
-        <div class="w-3 h-3 bg-gray-400 rounded-full 
-    animate-[step_1s_infinite]"></div>
-        <div class="w-3 h-3 bg-gray-400 rounded-full 
-    animate-[step_1s_infinite_0.2s]"></div>
-        <div class="w-3 h-3 bg-gray-400 rounded-full 
-    animate-[step_1s_infinite_0.4s]"></div>
-    </div>
-
-    <script>
-        const progressBar = document.querySelector('.bg-blue-500');
-        let progress = 45;
-
-        setInterval(() => {
-            progress = (progress + 2) % 100;
-            progressBar.style.width = `${progress}%`;
-        }, 200);
-    </script>
-
-</body>
-
-</html> -->
