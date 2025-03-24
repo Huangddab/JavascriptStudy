@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备校准测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#71717A] text-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- 校准模块 -->
+        <div class="bg-[#5A5A63] rounded-xl p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">自动校准系统</h2>
+            
+            <!-- 校准状态 -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-[#71717A] p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span>零点校准</span>
+                        <div class="w-2 h-2 rounded-full bg-green-400" id="zeroCalStatus"></div>
+                    </div>
+                    <div class="h-1 bg-gray-600 rounded-full">
+                        <div class="h-full bg-green-400 rounded-full transition-all duration-300" 
+                             id="zeroCalProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="bg-[#71717A] p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span>跨度校准</span>
+                        <div class="w-2 h-2 rounded-full bg-red-400" id="spanCalStatus"></div>
+                    </div>
+                    <div class="h-1 bg-gray-600 rounded-full">
+                        <div class="h-full bg-green-400 rounded-full transition-all duration-300" 
+                             id="spanCalProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 校准操作 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-4">
+                    <select id="calType" class="w-full bg-[#71717A] rounded-lg p-2">
+                        <option value="auto">自动校准</option>
+                        <option value="zero">零点校准</option>
+                        <option value="span">跨度校准</option>
+                    </select>
+                    <button onclick="startCalibration()" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition-colors">
+                        启动校准
+                    </button>
+                </div>
+                
+                <div class="bg-[#71717A] p-4 rounded-lg">
+                    <h3 class="text-sm font-bold mb-2">校准日志</h3>
+                    <div id="calLog" class="text-sm space-y-1 h-32 overflow-y-auto">
+                        <!-- 日志内容动态插入 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 仿真测试模块 -->
+        <div class="bg-[#5A5A63] rounded-xl p-6">
+            <h2 class="text-xl font-bold mb-4">仿真测试模式</h2>
+            
+            <div class="grid grid-cols-2 gap-6">
+                <!-- 测试控制 -->
+                <div class="space-y-4">
+                    <div class="bg-[#71717A] p-4 rounded-lg">
+                        <label class="block text-sm mb-2">模拟气体浓度 (ppm)</label>
+                        <input type="number" id="simValue" 
+                               class="w-full bg-transparent border border-gray-500 rounded-lg p-2"
+                               value="100" min="0" max="1000">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="startSimulation()" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors">
+                            启动测试
+                        </button>
+                        <button onclick="stopSimulation()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg transition-colors">
+                            停止测试
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 测试状态 -->
+                <div class="bg-[#71717A] p-4 rounded-lg">
+                    <h3 class="text-sm font-bold mb-2">测试状态</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>当前模拟值:</span>
+                            <span id="currentSimValue">-- ppm</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>报警状态:</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-gray-500" id="alarmStatus"></div>
+                                <span id="alarmText">待机</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-yellow-400" id="alarmMessage"></div>
+                    </div>
+                    
+                    <div class="mt-4 pt-2 border-t border-gray-600">
+                        <h4 class="text-sm font-bold mb-2">联动设备状态</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex justify-between items-center">
+                                <span>排风系统:</span>
+                                <div class="w-2 h-2 rounded-full bg-gray-500" id="fanStatus"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>安全阀门:</span>
+                                <div class="w-2 h-2 rounded-full bg-gray-500" id="valveStatus"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 校准系统状态
+        let isCalibrating = false;
+        const calLogs = [];
+
+        // 仿真测试状态
+        let simulationInterval = null;
+        let currentAlarmLevel = 0;
+
+        // 校准进度动画
+        function animateProgress(element, duration) {
+            let start = null;
+            const step = (timestamp) => {
+                if (!start) start = timestamp;
+                const progress = (timestamp - start) / duration;
+                element.style.width = Math.min(progress * 100, 100) + '%';
+                if (progress < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        // 启动校准
+        function startCalibration() {
+            if (isCalibrating) return;
+            
+            const type = document.getElementById('calType').value;
+            const isAuto = type === 'auto';
+            const targets = isAuto ? ['zero', 'span'] : [type];
+
+            isCalibrating = true;
+            targets.forEach(target => {
+                const progressBar = document.getElementById(`${target}CalProgress`);
+                const statusLed = document.getElementById(`${target}CalStatus`);
+                
+                progressBar.style.width = '0%';
+                statusLed.classList.replace('bg-green-400', 'bg-yellow-400');
+                
+                animateProgress(progressBar, 3000);
+                
+                setTimeout(() => {
+                    statusLed.classList.replace('bg-yellow-400', 'bg-green-400');
+                    const logEntry = `[${new Date().toLocaleTimeString()}] ${target.toUpperCase()}校准完成`;
+                    calLogs.push(logEntry);
+                    document.getElementById('calLog').innerHTML = 
+                        calLogs.map(log => `<div class="text-green-400">${log}</div>`).join('');
+                }, 3000);
+            });
+            
+            setTimeout(() => isCalibrating = false, 3000);
+        }
+
+        // 仿真测试控制
+        function startSimulation() {
+            const value = parseInt(document.getElementById('simValue').value);
+            if (isNaN(value)) return;
+
+            stopSimulation();
+            
+            document.getElementById('currentSimValue').textContent = value + ' ppm';
+            simulationInterval = setInterval(() => updateAlarmState(value), 1000);
+        }
+
+        function stopSimulation() {
+            clearInterval(simulationInterval);
+            simulationInterval = null;
+            resetAlarmState();
+        }
+
+        // 报警逻辑
+        function updateAlarmState(value) {
+            const alarmLed = document.getElementById('alarmStatus');
+            const alarmText = document.getElementById('alarmText');
+            const alarmMsg = document.getElementById('alarmMessage');
+            
+            let newLevel = 0;
+            if (value > 150) newLevel = 2;
+            else if (value > 100) newLevel = 1;
+
+            if (newLevel !== currentAlarmLevel) {
+                currentAlarmLevel = newLevel;
+                alarmLed.className = `w-2 h-2 rounded-full ${getAlarmColor(newLevel)}`;
+                alarmText.textContent = getAlarmText(newLevel);
+                alarmMsg.textContent = getAlarmMessage(newLevel);
+                
+                // 联动设备控制
+                document.getElementById('fanStatus').className = 
+                    `w-2 h-2 rounded-full ${newLevel > 0 ? 'bg-green-400' : 'bg-gray-500'}`;
+                document.getElementById('valveStatus').className = 
+                    `w-2 h-2 rounded-full ${newLevel > 1 ? 'bg-red-400' : 'bg-gray-500'}`;
+            }
+        }
+
+        function resetAlarmState() {
+            document.getElementById('currentSimValue').textContent = '-- ppm';
+            document.getElementById('alarmStatus').className = 'w-2 h-2 rounded-full bg-gray-500';
+            document.getElementById('alarmText').textContent = '待机';
+            document.getElementById('alarmMessage').textContent = '';
+            document.getElementById('fanStatus').className = 'w-2 h-2 rounded-full bg-gray-500';
+            document.getElementById('valveStatus').className = 'w-2 h-2 rounded-full bg-gray-500';
+        }
+
+        function getAlarmColor(level) {
+            return ['bg-gray-500', 'bg-yellow-400', 'bg-red-400'][level];
+        }
+
+        function getAlarmText(level) {
+            return ['待机', '一级报警', '二级报警'][level];
+        }
+
+        function getAlarmMessage(level) {
+            return [
+                '',
+                '警告：浓度超过安全阈值！',
+                '危险：立即启动应急响应！'
+            ][level];
+        }
+    </script>
+</body>
+</html>

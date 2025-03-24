@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备校准测试系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calibration-progress {
+            height: 8px;
+            transition: width 0.3s ease;
+        }
+
+        .test-simulation {
+            background: linear-gradient(45deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(8px);
+        }
+
+        .gas-type-indicator {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            animation: gas-pulse 1.5s infinite;
+        }
+
+        @keyframes gas-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
+            100% { box-shadow: 0 0 0 12px rgba(248, 113, 113, 0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-800 text-gray-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- 模式切换 -->
+        <div class="flex gap-2 mb-6">
+            <button class="px-4 py-2 bg-slate-700 rounded-t-lg active-tab" data-tab="calibration">校准模式</button>
+            <button class="px-4 py-2 bg-slate-700 rounded-t-lg" data-tab="simulation">仿真测试</button>
+        </div>
+
+        <!-- 校准模式 -->
+        <div id="calibration" class="tab-content">
+            <!-- 自动校准 -->
+            <div class="bg-slate-700/50 rounded-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">🔧 自动校准系统</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 校准状态 -->
+                    <div class="p-4 rounded-lg bg-slate-600/50">
+                        <div class="flex justify-between mb-2">
+                            <span>校准状态：</span>
+                            <span class="calibration-status text-emerald-400">待机中</span>
+                        </div>
+                        <div class="h-2 bg-slate-500 rounded-full">
+                            <div class="calibration-progress bg-emerald-400 rounded-full w-0"></div>
+                        </div>
+                    </div>
+
+                    <!-- 校准记录 -->
+                    <div class="p-4 rounded-lg bg-slate-600/50">
+                        <div class="flex justify-between items-center mb-2">
+                            <span>上次校准时间：</span>
+                            <span class="text-sm text-slate-300">2024-03-20 14:30</span>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex justify-between">
+                                <span>零点漂移：</span>
+                                <span class="text-emerald-400">+0.12%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>跨度偏差：</span>
+                                <span class="text-rose-400">-0.45%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作面板 -->
+                <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                    <button class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 rounded-lg" 
+                            onclick="startAutoCalibration()">
+                        🚀 启动自动校准
+                    </button>
+                    <button class="px-6 py-3 bg-sky-600 hover:bg-sky-500 rounded-lg"
+                            onclick="startManualCalibration()">
+                        🛠️ 手动校准流程
+                    </button>
+                </div>
+            </div>
+
+            <!-- 手动校准 -->
+            <div class="bg-slate-700/50 rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-4">🔩 手动校准设置</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-4">
+                        <div class="form-group">
+                            <label>校准气体浓度 (ppm)</label>
+                            <input type="number" class="calibration-input" 
+                                   min="0" max="1000" value="50">
+                        </div>
+                        <div class="form-group">
+                            <label>零点调整系数</label>
+                            <input type="range" class="calibration-slider" 
+                                   min="-5" max="5" step="0.1" value="0">
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="form-group">
+                            <label>跨度校准点 (ppm)</label>
+                            <select class="calibration-select">
+                                <option>25</option>
+                                <option>50</option>
+                                <option>100</option>
+                                <option>200</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>响应时间调整 (s)</label>
+                            <div class="flex gap-2">
+                                <input type="number" class="w-20" value="3" min="1" max="10">
+                                <button class="px-3 bg-slate-600 rounded-lg">测试</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 仿真测试 -->
+        <div id="simulation" class="tab-content hidden">
+            <div class="test-simulation rounded-lg p-6">
+                <h3 class="text-xl font-bold mb-6">🖥️ 仿真测试系统</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 信号发生器 -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="gas-type-indicator bg-rose-400"></div>
+                            <select class="gas-select bg-slate-600 px-4 py-2 rounded-lg">
+                                <option value="CL2">氯气 (Cl₂)</option>
+                                <option value="H2S">硫化氢 (H₂S)</option>
+                                <option value="CO">一氧化碳 (CO)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>目标浓度 (ppm)</label>
+                            <input type="number" class="simulation-input" 
+                                   min="0" max="1000" value="100">
+                        </div>
+                        
+                        <button class="w-full py-3 bg-rose-600 hover:bg-rose-500 rounded-lg"
+                                onclick="startSimulation()">
+                            ⚡ 启动仿真测试
+                        </button>
+                    </div>
+
+                    <!-- 测试结果 -->
+                    <div class="p-4 rounded-lg bg-slate-600/50">
+                        <div class="text-lg font-semibold mb-4">测试结果分析</div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span>报警触发：</span>
+                                <span class="alarm-status text-rose-400">未触发</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>响应时间：</span>
+                                <span class="response-time">--</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>误差范围：</span>
+                                <span class="error-range">±0.00%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 p-3 rounded-lg bg-slate-500/30">
+                            <div class="text-sm text-slate-300">联动策略验证：</div>
+                            <div class="simulation-log text-xs mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+class CalibrationSystem {
+    constructor() {
+        this.intervalId = null;
+        this.calibrationSteps = [
+            '零点校准初始化', 
+            '基准气体注入', 
+            '信号稳定性检测',
+            '跨度校准计算',
+            '校验结果分析'
+        ];
+    }
+
+    startAutoCalibration() {
+        let step = 0;
+        const progress = document.querySelector('.calibration-progress');
+        const status = document.querySelector('.calibration-status');
+        
+        status.textContent = '进行中...';
+        status.classList.replace('text-emerald-400', 'text-amber-400');
+        
+        this.intervalId = setInterval(() => {
+            step++;
+            const percent = (step / this.calibrationSteps.length) * 100;
+            progress.style.width = `${percent}%`;
+            
+            if(step >= this.calibrationSteps.length) {
+                clearInterval(this.intervalId);
+                status.textContent = '校准完成';
+                status.classList.replace('text-amber-400', 'text-emerald-400');
+                progress.style.width = '0%';
+            }
+        }, 2000);
+    }
+}
+
+class SimulationSystem {
+    constructor() {
+        this.gasTypes = {
+            CL2: { alarmThreshold: 10 },
+            H2S: { alarmThreshold: 5 },
+            CO: { alarmThreshold: 35 }
+        };
+    }
+
+    startTest(gasType, concentration) {
+        const startTime = Date.now();
+        const alarmThreshold = this.gasTypes[gasType].alarmThreshold;
+        const alarmStatus = document.querySelector('.alarm-status');
+        const responseTime = document.querySelector('.response-time');
+        const log = document.querySelector('.simulation-log');
+        
+        // 模拟传感器响应
+        setTimeout(() => {
+            const elapsed = ((Date.now() - startTime)/1000).toFixed(1);
+            responseTime.textContent = `${elapsed}s`;
+            
+            if(concentration >= alarmThreshold) {
+                alarmStatus.textContent = '触发报警';
+                alarmStatus.classList.add('text-rose-400');
+                log.innerHTML = `
+                    <div>🛑 报警信号发出 (${gasType} > ${alarmThreshold}ppm)</div>
+                    <div class="mt-1">⚡ 启动排风系统</div>
+                    <div>🔔 声光报警激活</div>
+                `;
+            } else {
+                alarmStatus.textContent = '未触发';
+                alarmStatus.classList.remove('text-rose-400');
+                log.textContent = '系统运行正常，未触发报警阈值';
+            }
+        }, 1500);
+    }
+}
+
+// 初始化系统
+const calibrator = new CalibrationSystem();
+const simulator = new SimulationSystem();
+
+// 交互控制
+function startAutoCalibration() {
+    calibrator.startAutoCalibration();
+}
+
+function startSimulation() {
+    const gasType = document.querySelector('.gas-select').value;
+    const concentration = parseFloat(document.querySelector('.simulation-input').value);
+    simulator.startTest(gasType, concentration);
+}
+
+// 选项卡切换
+document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // 切换激活状态
+        document.querySelectorAll('[data-tab]').forEach(t => 
+            t.classList.remove('active-tab'));
+        this.classList.add('active-tab');
+        
+        // 显示对应内容
+        const tabId = this.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(t => 
+            t.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
+    });
+});
+</script>
+</body>
+</html>

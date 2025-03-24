@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能环境监测系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-primary': '#1F2937',
+                        'dark-secondary': '#374151',
+                        'dark-accent': '#4B5563'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-dark-primary p-6 transition-colors duration-300">
+    <!-- 主题切换按钮 -->
+    <div class="absolute top-4 right-4">
+        <button id="themeToggle" class="p-2 rounded-full bg-white dark:bg-dark-secondary shadow-lg hover:shadow-md transition-shadow">
+            <svg id="sunIcon" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+            </svg>
+            <svg id="moonIcon" class="w-6 h-6 text-blue-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- 状态指示条 -->
+    <div id="statusBar" class="w-full h-2 mb-4 rounded transition-colors"></div>
+
+    <!-- 设备概览卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow">
+            <h3 class="text-gray-500 dark:text-gray-400">运行时长</h3>
+            <p id="uptime" class="text-2xl font-bold dark:text-white">0 小时</p>
+        </div>
+        <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow">
+            <h3 class="text-gray-500 dark:text-gray-400">存储使用率</h3>
+            <div class="flex items-center">
+                <div class="w-full bg-gray-200 dark:bg-dark-accent rounded h-2">
+                    <div id="storageBar" class="bg-blue-500 dark:bg-blue-600 h-2 rounded transition-all"></div>
+                </div>
+                <span id="storageValue" class="ml-2 dark:text-gray-300">0%</span>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow">
+            <h3 class="text-gray-500 dark:text-gray-400">当前报警</h3>
+            <p id="alarmCount" class="text-2xl font-bold text-red-500 dark:text-red-400">0</p>
+        </div>
+    </div>
+
+    <!-- 环境舒适度卡片 -->
+    <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow mb-6">
+        <h3 class="text-lg font-bold mb-4 dark:text-white">环境舒适度</h3>
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="w-32 h-32 relative mb-4 md:mb-0 md:mr-6">
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div id="comfortGauge" class="w-24 h-24 rounded-full border-8 transition-colors ease-in-out duration-500"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="comfortValue" class="text-2xl font-bold dark:text-white">--</span>
+                </div>
+            </div>
+            <div class="flex-1 w-full space-y-3">
+                <div class="flex justify-between items-center dark:text-gray-300">
+                    <span>温度舒适度：</span>
+                    <div class="flex items-center">
+                        <div id="tempStatus" class="w-2 h-2 rounded-full mr-2"></div>
+                        <span id="tempLevel" class="text-sm">--</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center dark:text-gray-300">
+                    <span>湿度舒适度：</span>
+                    <div class="flex items-center">
+                        <div id="humiStatus" class="w-2 h-2 rounded-full mr-2"></div>
+                        <span id="humiLevel" class="text-sm">--</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center dark:text-gray-300">
+                    <span>空气质量：</span>
+                    <div class="flex items-center">
+                        <div id="airStatus" class="w-2 h-2 rounded-full mr-2"></div>
+                        <span id="airLevel" class="text-sm">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据监测区域 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 实时监测数据 -->
+        <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow">
+            <h2 class="text-lg font-bold mb-4 dark:text-white">实时监测数据</h2>
+            <div class="space-y-3">
+                <div class="data-item">
+                    <span class="dark:text-gray-300">生物参数：</span>
+                    <span id="bioData" class="font-mono text-blue-600 dark:text-blue-400">--</span>
+                </div>
+                <div class="data-item">
+                    <span class="dark:text-gray-300">化学参数：</span>
+                    <span id="chemData" class="font-mono text-blue-600 dark:text-blue-400">--</span>
+                </div>
+                <div class="data-item">
+                    <span class="dark:text-gray-300">环境参数：</span>
+                    <span id="envData" class="font-mono text-blue-600 dark:text-blue-400">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设备健康状态 -->
+        <div class="bg-white dark:bg-dark-secondary p-4 rounded-lg shadow">
+            <h2 class="text-lg font-bold mb-4 dark:text-white">设备健康状态</h2>
+            <div class="space-y-3">
+                <div class="flex items-center dark:text-gray-300">
+                    <div id="sensorLed" class="w-2 h-2 rounded-full mr-2 bg-green-500"></div>
+                    <span>传感器状态：</span>
+                    <span id="sensorStatus" class="font-medium dark:text-white">正常</span>
+                </div>
+                <div class="flex items-center dark:text-gray-300">
+                    <div id="pumpLed" class="w-2 h-2 rounded-full mr-2 bg-green-500"></div>
+                    <span>吸气泵压力：</span>
+                    <span id="pumpPressure" class="font-medium dark:text-white">-- kPa</span>
+                </div>
+                <div class="flex items-center dark:text-gray-300">
+                    <div id="tempLed" class="w-2 h-2 rounded-full mr-2 bg-green-500"></div>
+                    <span>设备温度：</span>
+                    <span id="temperature" class="font-medium dark:text-white">-- °C</span>
+                </div>
+                <div class="flex items-center dark:text-gray-300">
+                    <div id="humiLed" class="w-2 h-2 rounded-full mr-2 bg-green-500"></div>
+                    <span>设备湿度：</span>
+                    <span id="humidity" class="font-medium dark:text-white">-- %</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// 主题切换逻辑
+const themeToggle = document.getElementById('themeToggle');
+const sunIcon = document.getElementById('sunIcon');
+const moonIcon = document.getElementById('moonIcon');
+const htmlElement = document.documentElement;
+
+// 初始化主题
+let currentTheme = localStorage.getItem('theme') || 'dark';
+htmlElement.classList.toggle('dark', currentTheme === 'dark');
+moonIcon.classList.toggle('hidden', currentTheme !== 'dark');
+sunIcon.classList.toggle('hidden', currentTheme === 'dark');
+
+themeToggle.addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    htmlElement.classList.toggle('dark');
+    localStorage.setItem('theme', currentTheme);
+    moonIcon.classList.toggle('hidden');
+    sunIcon.classList.toggle('hidden');
+});
+
+// 系统状态管理
+let systemStatus = {
+    alarms: 0,
+    uptime: 0,
+    storage: 0,
+    status: 'normal',
+    sensors: {
+        bio: true,
+        chem: true,
+        env: true
+    }
+};
+
+// 数据生成器
+function generateSensorData() {
+    const isError = Math.random() < 0.1;
+    return {
+        value: (Math.random() * 100).toFixed(2),
+        status: isError ? 'error' : 'normal',
+        temp: 20 + Math.random() * 15,
+        humi: 40 + Math.random() * 30,
+        air: Math.random() * 100
+    };
+}
+
+// 舒适度计算
+function calculateComfort(t, h, aq) {
+    const tempScore = Math.max(0, 1 - Math.abs(22 - t)/10);
+    const humiScore = Math.max(0, 1 - Math.abs(50 - h)/20);
+    const airScore = aq / 100;
+    return Math.min(100, (tempScore * 0.4 + humiScore * 0.3 + airScore * 0.3) * 100);
+}
+
+// 更新界面
+function updateUI() {
+    const data = generateSensorData();
+    const isDark = currentTheme === 'dark';
+
+    // 更新状态条
+    const statusBar = document.getElementById('statusBar');
+    statusBar.className = `w-full h-2 mb-4 rounded transition-colors ${
+        systemStatus.status === 'normal' ? 
+        (isDark ? 'bg-green-600' : 'bg-green-500') : 
+        (isDark ? 'bg-yellow-600' : 'bg-yellow-500')
+    }`;
+
+    // 更新概览数据
+    document.getElementById('uptime').textContent = `${systemStatus.uptime} 小时`;
+    document.getElementById('storageValue').textContent = `${systemStatus.storage.toFixed(1)}%`;
+    document.getElementById('storageBar').style.width = `${systemStatus.storage}%`;
+    document.getElementById('alarmCount').textContent = systemStatus.alarms;
+
+    // 更新实时数据
+    document.getElementById('bioData').textContent = data.value;
+    document.getElementById('chemData').textContent = data.value;
+    document.getElementById('envData').textContent = data.value;
+
+    // 更新设备健康状态
+    const updateDeviceStatus = (ledId, statusId, value, unit, status) => {
+        const led = document.getElementById(ledId);
+        led.className = `w-2 h-2 rounded-full mr-2 ${status === 'normal' ? 'bg-green-500' : 'bg-red-500'}`;
+        document.getElementById(statusId).textContent = `${value}${unit}`;
+    };
+
+    updateDeviceStatus('sensorLed', 'sensorStatus', 
+        data.status === 'normal' ? '正常' : '异常', '', data.status);
+    updateDeviceStatus('pumpLed', 'pumpPressure', 
+        (30 + Math.random() * 70).toFixed(1), ' kPa', 'normal');
+    updateDeviceStatus('tempLed', 'temperature', 
+        (25 + Math.random() * 10).toFixed(1), ' °C', 'normal');
+    updateDeviceStatus('humiLed', 'humidity', 
+        (40 + Math.random() * 20).toFixed(1), ' %', 'normal');
+
+    // 更新环境舒适度
+    const comfort = calculateComfort(data.temp, data.humi, data.air);
+    const comfortGauge = document.getElementById('comfortGauge');
+    comfortGauge.className = `w-24 h-24 rounded-full border-8 transition-colors ease-in-out duration-500 ${
+        comfort > 80 ? (isDark ? 'border-green-600' : 'border-green-500') :
+        comfort > 60 ? (isDark ? 'border-yellow-600' : 'border-yellow-500') :
+        (isDark ? 'border-red-600' : 'border-red-500')
+    }`;
+    document.getElementById('comfortValue').textContent = `${comfort.toFixed(0)}%`;
+
+    // 更新环境参数状态
+    const updateEnvStatus = (elementId, value, ranges) => {
+        const element = document.getElementById(elementId);
+        const [good, fair] = ranges;
+        element.className = `w-2 h-2 rounded-full mr-2 ${
+            value >= good ? 'bg-green-500' :
+            value >= fair ? 'bg-yellow-500' : 'bg-red-500'
+        }`;
+    };
+
+    updateEnvStatus('tempStatus', data.temp, [18, 26]);
+    updateEnvStatus('humiStatus', data.humi, [40, 60]);
+    updateEnvStatus('airStatus', data.air, [80, 60]);
+
+    document.getElementById('tempLevel').textContent = 
+        data.temp >= 18 && data.temp <= 26 ? '适宜' : '不适';
+    document.getElementById('humiLevel').textContent = 
+        data.humi >= 40 && data.humi <= 60 ? '适宜' : '不适';
+    document.getElementById('airLevel').textContent = 
+        data.air >= 80 ? '优良' : data.air >= 60 ? '中等' : '较差';
+
+    // 异常检测
+    if (data.status === 'error' || comfort < 60) {
+        systemStatus.alarms++;
+        systemStatus.status = 'warning';
+    }
+}
+
+// 初始化定时器
+setInterval(() => {
+    systemStatus.uptime += 0.1;
+    systemStatus.storage = Math.min(100, systemStatus.storage + 0.05);
+    updateUI();
+}, 100);
+
+// 初始更新
+updateUI();
+</script>
+
+<style>
+.data-item {
+    @apply flex justify-between items-center p-2 bg-gray-50 rounded;
+    @apply dark:bg-dark-primary dark:border dark:border-dark-accent;
+    transition: all 0.3s ease;
+}
+
+@keyframes gauge-pulse {
+    0% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.9; }
+}
+
+#comfortGauge {
+    animation: gauge-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.dark #comfortGauge {
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+</style>
+</body>
+</html>

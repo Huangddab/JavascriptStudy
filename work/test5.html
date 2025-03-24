@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业设备智能监控系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #71717A;
+            --text-primary: #F4F4F5;
+            --accent-blue: #60A5FA;
+            --accent-orange: #FB923C;
+            --status-normal: #34D399;
+            --status-warning: #FBBF24;
+            --status-alert: #EF4444;
+        }
+
+        .glassy-panel {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+
+        .compare-date-picker {
+            max-width: 0;
+            overflow: hidden;
+            transition: max-width 0.3s ease;
+        }
+
+        .compare-mode .compare-date-picker {
+            max-width: 200px;
+        }
+
+        .chart-tooltip {
+            background: rgba(39, 39, 42, 0.9) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 6px !important;
+        }
+    </style>
+</head>
+<body class="bg-[#71717A] text-[#F4F4F5] min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 实时监控看板 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- 温度卡片 -->
+            <div class="glassy-panel rounded-xl p-4 cursor-pointer parameter-card" data-param="temperature">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="status-indicator bg-[var(--status-alert)]"></div>
+                        <h2 class="text-lg font-semibold">🌡️ 设备温度</h2>
+                    </div>
+                    <span class="text-2xl font-mono">58.6℃</span>
+                </div>
+                <div class="h-32">
+                    <canvas class="mini-chart" data-param="temperature"></canvas>
+                </div>
+            </div>
+
+            <!-- 压力卡片 -->
+            <div class="glassy-panel rounded-xl p-4 cursor-pointer parameter-card" data-param="pressure">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="status-indicator bg-[var(--status-warning)]"></div>
+                        <h2 class="text-lg font-semibold">🌀 管路气压</h2>
+                    </div>
+                    <span class="text-2xl font-mono">32.1kPa</span>
+                </div>
+                <div class="h-32">
+                    <canvas class="mini-chart" data-param="pressure"></canvas>
+                </div>
+            </div>
+
+            <!-- 电压卡片 -->
+            <div class="glassy-panel rounded-xl p-4 cursor-pointer parameter-card" data-param="voltage">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="status-indicator bg-[var(--status-normal)]"></div>
+                        <h2 class="text-lg font-semibold">🔋 电池电压</h2>
+                    </div>
+                    <span class="text-2xl font-mono">26.8V</span>
+                </div>
+                <div class="h-32">
+                    <canvas class="mini-chart" data-param="voltage"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史分析模态框 -->
+        <div id="historyModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="glassy-panel rounded-xl w-full max-w-4xl p-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 id="modalTitle" class="text-xl font-bold mb-2">温度历史趋势</h3>
+                            <div class="flex gap-2 items-center text-sm text-[#A1A1AA]">
+                                <span id="currentValue" class="font-mono">58.6℃</span>
+                                <span id="valueRange">允许范围：-20℃ ~ 60℃</span>
+                            </div>
+                        </div>
+                        <button class="text-2xl hover:text-[var(--accent-blue)] transition-colors" onclick="closeModal()">×</button>
+                    </div>
+                    
+                    <div class="flex flex-col lg:flex-row gap-4 mb-6">
+                        <div class="flex gap-2 items-center">
+                            <input type="date" id="mainDate" class="bg-[#52525B] px-3 py-1 rounded-lg" value="2024-03-20">
+                            <button id="compareBtn" class="px-3 py-1 bg-[#52525B] hover:bg-[#3F3F46] rounded-lg transition-colors">
+                                <span>🕒</span> 对比模式
+                            </button>
+                            <div id="compareDateContainer" class="compare-date-picker">
+                                <input type="date" id="compareDate" class="bg-[#52525B] px-3 py-1 rounded-lg" value="2024-03-19">
+                            </div>
+                        </div>
+                        <div id="diagnosisAdvice" class="text-sm p-3 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30">
+                            ❗ 严重超标：立即停机检查冷却系统
+                        </div>
+                    </div>
+
+                    <div class="h-96">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// 历史数据存储
+const historyData = {
+    temperature: {
+        '2024-03-20': generateHourlyData(58.6, 18),
+        '2024-03-19': generateHourlyData(55.2, 16),
+        '2024-03-18': generateHourlyData(53.8, 15)
+    },
+    pressure: {
+        '2024-03-20': generateHourlyData(32.1, 7),
+        '2024-03-19': generateHourlyData(29.8, 6),
+        '2024-03-18': generateHourlyData(28.5, 5)
+    },
+    voltage: {
+        '2024-03-20': generateHourlyData(26.8, 2),
+        '2024-03-19': generateHourlyData(25.9, 1.8),
+        '2024-03-18': generateHourlyData(25.3, 1.5)
+    }
+};
+
+// 系统状态
+let currentParam = 'temperature';
+let isCompareMode = false;
+let mainDate = '2024-03-20';
+let compareDate = '2024-03-19';
+
+// 数据生成函数
+function generateHourlyData(base, amplitude) {
+    return Array.from({length: 24}, (_, i) => 
+        base + amplitude * Math.sin(i/4) + (Math.random() - 0.5) * 3
+    );
+}
+
+// 初始化迷你图表
+function initMiniCharts() {
+    document.querySelectorAll('.mini-chart').forEach(canvas => {
+        const param = canvas.dataset.param;
+        const ctx = canvas.getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, param === 'temperature' ? '#60A5FA80' : 
+                            param === 'pressure' ? '#FB923C80' : '#34D39980');
+        gradient.addColorStop(1, param === 'temperature' ? '#3B82F620' : 
+                            param === 'pressure' ? '#F9731620' : '#34D39920');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array(24).fill().map((_,i) => i),
+                datasets: [{
+                    data: historyData[param][mainDate],
+                    borderColor: param === 'temperature' ? '#60A5FA' : 
+                               param === 'pressure' ? '#FB923C' : '#34D399',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: gradient
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+    });
+}
+
+// 初始化历史图表
+let historyChart = null;
+function initHistoryChart() {
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    if(historyChart) historyChart.destroy();
+    
+    historyChart = new Chart(ctx, {
+        type: 'line',
+        data: getChartData(),
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: '#27272A',
+                    titleColor: '#A1A1AA',
+                    bodyColor: '#F4F4F5'
+                },
+                legend: {
+                    labels: {
+                        color: '#A1A1AA',
+                        boxWidth: 12,
+                        padding: 16
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    ticks: { color: '#A1A1AA' }
+                },
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    ticks: { color: '#A1A1AA' }
+                }
+            }
+        }
+    });
+}
+
+// 获取图表数据
+function getChartData() {
+    const mainData = historyData[currentParam][mainDate];
+    const compareData = isCompareMode ? historyData[currentParam][compareDate] : null;
+
+    return {
+        labels: Array(24).fill().map((_,i) => `${i}:00`),
+        datasets: [
+            {
+                label: mainDate,
+                data: mainData,
+                borderColor: '#60A5FA',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 3
+            },
+            ...(compareData ? [{
+                label: compareDate,
+                data: compareData,
+                borderColor: '#FB923C',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                tension: 0.3,
+                pointRadius: 3
+            }] : [])
+        ]
+    };
+}
+
+// 更新诊断建议
+function updateDiagnosis() {
+    const adviceElement = document.getElementById('diagnosisAdvice');
+    const currentValue = historyData[currentParam][mainDate][23];
+    const { min, max } = getParamRange(currentParam);
+
+    if(currentValue > max) {
+        adviceElement.textContent = `❗ 严重超标：${getCriticalAdvice(currentParam)}`;
+        adviceElement.className = 'text-sm p-3 rounded-lg bg-[#EF4444]/10 border border-[#EF4444]/30';
+    } else if(currentValue > max * 0.9) {
+        adviceElement.textContent = `⚠️ 接近上限：${getWarningAdvice(currentParam)}`;
+        adviceElement.className = 'text-sm p-3 rounded-lg bg-[#FBBF24]/10 border border-[#FBBF24]/30';
+    } else {
+        adviceElement.textContent = '✅ 当前状态正常';
+        adviceElement.className = 'text-sm p-3 rounded-lg bg-[#34D399]/10 border border-[#34D399]/30';
+    }
+}
+
+// 参数范围配置
+function getParamRange(param) {
+    return {
+        temperature: { min: -20, max: 60 },
+        pressure: { min: 20, max: 30 },
+        voltage: { min: 21.6, max: 26.4 }
+    }[param];
+}
+
+// 事件监听
+document.querySelectorAll('.parameter-card').forEach(card => {
+    card.addEventListener('click', function() {
+        currentParam = this.dataset.param;
+        mainDate = document.getElementById('mainDate').value;
+        initHistoryChart();
+        updateChart();
+        updateModalInfo();
+        document.getElementById('historyModal').classList.remove('hidden');
+    });
+});
+
+document.getElementById('compareBtn').addEventListener('click', () => {
+    isCompareMode = !isCompareMode;
+    document.getElementById('historyModal').classList.toggle('compare-mode');
+    document.getElementById('compareDateContainer').style.maxWidth = 
+        isCompareMode ? '200px' : '0';
+    updateChart();
+});
+
+document.getElementById('mainDate').addEventListener('change', e => {
+    mainDate = e.target.value;
+    updateChart();
+    updateModalInfo();
+});
+
+document.getElementById('compareDate').addEventListener('change', e => {
+    compareDate = e.target.value;
+    updateChart();
+});
+
+// 更新图表
+function updateChart() {
+    if(historyChart) {
+        historyChart.data = getChartData();
+        historyChart.update();
+    }
+    updateDiagnosis();
+}
+
+// 更新模态框信息
+function updateModalInfo() {
+    const { min, max } = getParamRange(currentParam);
+    const currentValue = historyData[currentParam][mainDate][23];
+    
+    document.getElementById('modalTitle').textContent = 
+        `${getParamName(currentParam)}历史趋势`;
+    document.getElementById('currentValue').textContent = 
+        `${currentValue.toFixed(1)}${getParamUnit(currentParam)}`;
+    document.getElementById('valueRange').textContent = 
+        `允许范围：${min}${getParamUnit(currentParam)} ~ ${max}${getParamUnit(currentParam)}`;
+}
+
+// 工具函数
+function getParamName(param) {
+    return {
+        temperature: '温度',
+        pressure: '气压',
+        voltage: '电压'
+    }[param];
+}
+
+function getParamUnit(param) {
+    return {
+        temperature: '℃',
+        pressure: 'kPa',
+        voltage: 'V'
+    }[param];
+}
+
+function getCriticalAdvice(param) {
+    return {
+        temperature: '立即停机检查冷却系统',
+        pressure: '紧急泄压并检查管路密封',
+        voltage: '立即断开电源检查电池组'
+    }[param];
+}
+
+function getWarningAdvice(param) {
+    return {
+        temperature: '建议增加散热措施',
+        pressure: '检查压力调节阀工作状态',
+        voltage: '建议进行电池健康度检测'
+    }[param];
+}
+
+// 初始化系统
+window.addEventListener('DOMContentLoaded', () => {
+    initMiniCharts();
+    initHistoryChart();
+});
+
+function closeModal() {
+    document.getElementById('historyModal').classList.add('hidden');
+}
+</script>
+</body>
+</html>
