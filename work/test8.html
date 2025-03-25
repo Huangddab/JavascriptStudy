@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业设备智能监控系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glassy-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .status-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+            100% { box-shadow: 0 0 0 12px rgba(74, 222, 128, 0); }
+        }
+
+        .alarm-blink {
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-gray-100 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- 设备概览 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-500/20 p-2 rounded-lg">
+                            <span class="text-2xl">⏱️</span>
+                        </div>
+                        <div>
+                            <div class="text-sm text-slate-300">运行时长</div>
+                            <div class="text-2xl font-bold" id="uptime">720h</div>
+                        </div>
+                    </div>
+                    <div class="text-sm text-slate-400">7×24</div>
+                </div>
+            </div>
+
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-purple-500/20 p-2 rounded-lg">
+                            <span class="text-2xl">💾</span>
+                        </div>
+                        <div>
+                            <div class="text-sm text-slate-300">存储使用率</div>
+                            <div class="text-2xl font-bold" id="storage">75%</div>
+                        </div>
+                    </div>
+                    <div class="text-sm text-slate-400">32/64GB</div>
+                </div>
+                <div class="mt-3 h-1 bg-slate-600 rounded-full">
+                    <div class="bg-gradient-to-r from-purple-400 to-pink-400 h-full rounded-full w-3/4"></div>
+                </div>
+            </div>
+
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-red-500/20 p-2 rounded-lg">
+                            <span class="text-2xl">🚨</span>
+                        </div>
+                        <div>
+                            <div class="text-sm text-slate-300">当前报警</div>
+                            <div class="text-2xl font-bold alarm-blink" id="alarms">3</div>
+                        </div>
+                    </div>
+                    <div class="text-sm text-red-400">2 未确认</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 环境参数监控 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-emerald-400 rounded-full status-pulse"></div>
+                        <span class="font-semibold">🌡️ 传感器温度</span>
+                    </div>
+                    <span class="text-2xl font-mono" id="temperature">58.6℃</span>
+                </div>
+                <canvas class="h-20 w-full" id="tempChart"></canvas>
+            </div>
+
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-amber-400 rounded-full status-pulse"></div>
+                        <span class="font-semibold">🌀 管路气压</span>
+                    </div>
+                    <span class="text-2xl font-mono" id="pressure">32.1kPa</span>
+                </div>
+                <canvas class="h-20 w-full" id="pressureChart"></canvas>
+            </div>
+
+            <div class="glassy-panel rounded-xl p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-emerald-400 rounded-full status-pulse"></div>
+                        <span class="font-semibold">🔋 电池电压</span>
+                    </div>
+                    <span class="text-2xl font-mono" id="voltage">26.8V</span>
+                </div>
+                <canvas class="h-20 w-full" id="voltageChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 校准测试面板 -->
+        <div class="glassy-panel rounded-xl p-6">
+            <div class="flex gap-2 mb-6">
+                <button class="px-4 py-2 bg-slate-700 rounded-lg active-tab">校准模式</button>
+                <button class="px-4 py-2 bg-slate-700 rounded-lg">仿真测试</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">自动校准程序</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span>校准进度：</span>
+                            <div class="w-1/2 h-2 bg-slate-600 rounded-full">
+                                <div class="h-full bg-emerald-400 rounded-full w-0" id="calProgress"></div>
+                            </div>
+                        </div>
+                        <button class="w-full py-2 bg-emerald-600 rounded-lg" onclick="startCalibration()">
+                            🚀 启动自动校准
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">仿真测试</h3>
+                    <div class="space-y-4">
+                        <select class="w-full bg-slate-700 p-2 rounded-lg">
+                            <option>100ppm 氯气</option>
+                            <option>50ppm 硫化氢</option>
+                        </select>
+                        <button class="w-full py-2 bg-purple-600 rounded-lg" onclick="runSimulation()">
+                            ⚡ 执行仿真测试
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// 设备概览数据
+let uptimeHours = 720;
+setInterval(() => {
+    uptimeHours++;
+    document.getElementById('uptime').textContent = `${uptimeHours}h`;
+}, 3600000);
+
+// 环境监控图表
+const chartConfig = {
+    type: 'line',
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { display: false }, y: { display: false } }
+    }
+};
+
+const tempChart = new Chart(document.getElementById('tempChart'), {
+    ...chartConfig,
+    data: {
+        labels: Array(30).fill(''),
+        datasets: [{
+            data: Array(30).fill().map(() => 50 + Math.random() * 10),
+            borderColor: '#3b82f6',
+            tension: 0.4
+        }]
+    }
+});
+
+const pressureChart = new Chart(document.getElementById('pressureChart'), {
+    ...chartConfig,
+    data: {
+        labels: Array(30).fill(''),
+        datasets: [{
+            data: Array(30).fill().map(() => 25 + Math.random() * 5),
+            borderColor: '#f59e0b',
+            tension: 0.4
+        }]
+    }
+});
+
+const voltageChart = new Chart(document.getElementById('voltageChart'), {
+    ...chartConfig,
+    data: {
+        labels: Array(30).fill(''),
+        datasets: [{
+            data: Array(30).fill().map(() => 24 + Math.random() * 2),
+            borderColor: '#10b981',
+            tension: 0.4
+        }]
+    }
+});
+
+// 数据更新逻辑
+setInterval(() => {
+    updateChart(tempChart);
+    updateChart(pressureChart);
+    updateChart(voltageChart);
+}, 2000);
+
+function updateChart(chart) {
+    const data = chart.data.datasets[0].data;
+    data.shift();
+    data.push(data[data.length-1] + (Math.random() - 0.5) * 2);
+    chart.update();
+}
+
+// 校准系统
+let calibrationProgress = 0;
+function startCalibration() {
+    const progressBar = document.getElementById('calProgress');
+    calibrationProgress = 0;
+    
+    const interval = setInterval(() => {
+        calibrationProgress += 5;
+        progressBar.style.width = `${calibrationProgress}%`;
+        
+        if(calibrationProgress >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+                progressBar.style.width = '0%';
+            }, 2000);
+        }
+    }, 200);
+}
+
+// 仿真测试
+function runSimulation() {
+    alert('仿真测试已启动...');
+}
+</script>
+</body>
+</html>

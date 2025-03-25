@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备控制系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .control-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .switch {
+            width: 60px;
+            height: 34px;
+        }
+        .switch-toggle {
+            width: 28px;
+            height: 28px;
+            transition: all 0.3s ease;
+        }
+        .switch.on {
+            background: #10B981;
+        }
+        .switch.off {
+            background: #6B7280;
+        }
+        .switch.on .switch-toggle {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-[#71717A] min-h-screen p-6">
+    <div class="max-w-2xl mx-auto">
+        <!-- 设备重启控制 -->
+        <div class="control-card rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">设备电源管理</h2>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-300">当前状态：<span id="deviceStatus" class="text-green-400">运行中</span></p>
+                    <p class="text-sm text-gray-400">上次重启时间：<span id="lastReboot">2024-03-20 14:30:00</span></p>
+                </div>
+                <button id="rebootBtn" 
+                        class="px-6 py-2 bg-blue-600/30 rounded-lg text-blue-400 hover:bg-blue-600/40 flex items-center"
+                        onclick="handleReboot()">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    立即重启
+                </button>
+            </div>
+        </div>
+
+        <!-- 气路控制系统 -->
+        <div class="control-card rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">气路管理系统</h2>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300">主供气线路</p>
+                        <p class="text-sm text-gray-400">当前压力：<span id="gasPressure">32.5kPa</span></p>
+                    </div>
+                    <div class="switch relative off" id="gasSwitch" onclick="toggleGasSystem()">
+                        <div class="switch-toggle absolute top-1 left-1 bg-white rounded-full"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300">备用气路</p>
+                        <p class="text-sm text-gray-400">当前状态：<span id="backupGasStatus">待机</span></p>
+                    </div>
+                    <div class="switch relative off" id="backupSwitch" onclick="toggleBackupGas()">
+                        <div class="switch-toggle absolute top-1 left-1 bg-white rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 声音报警系统 -->
+        <div class="control-card rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">声音报警系统</h2>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-300">蜂鸣器状态</p>
+                    <p class="text-sm text-gray-400">当前音量：<span id="buzzerVolume">75%</span></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="switch relative on" id="buzzerSwitch" onclick="toggleBuzzer()">
+                        <div class="switch-toggle absolute top-1 left-1 bg-white rounded-full"></div>
+                    </div>
+                    <button onclick="testBuzzer()" 
+                            class="px-4 py-2 bg-purple-600/30 rounded-lg text-purple-400 hover:bg-purple-600/40">
+                        测试声音
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// 设备状态管理
+let deviceState = {
+    isRebooting: false,
+    gasSystemActive: false,
+    backupGasActive: false,
+    buzzerActive: true,
+    lastReboot: new Date()
+};
+
+// 切换气路系统
+function toggleGasSystem() {
+    if(deviceState.isRebooting) return;
+    const switchElement = document.getElementById('gasSwitch');
+    deviceState.gasSystemActive = !deviceState.gasSystemActive;
+    
+    switchElement.classList.toggle('on');
+    switchElement.classList.toggle('off');
+    document.getElementById('backupGasStatus').textContent = 
+        deviceState.gasSystemActive ? '激活' : '待机';
+}
+
+// 切换备用气路
+function toggleBackupGas() {
+    if(deviceState.isRebooting) return;
+    const switchElement = document.getElementById('backupSwitch');
+    deviceState.backupGasActive = !deviceState.backupGasActive;
+    
+    switchElement.classList.toggle('on');
+    switchElement.classList.toggle('off');
+}
+
+// 蜂鸣器控制
+function toggleBuzzer() {
+    const switchElement = document.getElementById('buzzerSwitch');
+    deviceState.buzzerActive = !deviceState.buzzerActive;
+    
+    switchElement.classList.toggle('on');
+    switchElement.classList.toggle('off');
+}
+
+// 测试蜂鸣器
+function testBuzzer() {
+    if(!deviceState.buzzerActive) return;
+    const buzzer = new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWf2g...'); // 示例音效
+    buzzer.play();
+}
+
+// 设备重启处理
+function handleReboot() {
+    if(deviceState.isRebooting) return;
+    
+    deviceState.isRebooting = true;
+    const btn = document.getElementById('rebootBtn');
+    const originalText = btn.innerHTML;
+    
+    // 更新按钮状态
+    btn.innerHTML = `
+        <svg class="animate-spin w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+        </svg>
+        重启中...
+    `;
+    btn.disabled = true;
+
+    // 模拟重启过程
+    setTimeout(() => {
+        deviceState.isRebooting = false;
+        deviceState.lastReboot = new Date();
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        document.getElementById('lastReboot').textContent = 
+            deviceState.lastReboot.toLocaleString();
+    }, 5000);
+}
+
+// 初始化显示
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('lastReboot').textContent = 
+        deviceState.lastReboot.toLocaleString();
+});
+</script>
+</body>
+</html>

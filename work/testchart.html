@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测数据可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 生物粒子检测雷达图 -->
+            <div class="bg-gray-800 p-6 rounded-xl">
+                <h2 class="text-xl font-bold mb-4">生物粒子浓度分布</h2>
+                <div class="relative h-80">
+                    <canvas id="bioParticleChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 化学因子波形图 -->
+            <div class="bg-gray-800 p-6 rounded-xl">
+                <h2 class="text-xl font-bold mb-4">化学因子实时监测</h2>
+                <div class="relative h-80">
+                    <canvas id="chemicalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 生物粒子雷达图
+        const bioCtx = document.getElementById('bioParticleChart').getContext('2d');
+        new Chart(bioCtx, {
+            type: 'radar',
+            data: {
+                labels: ['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°'],
+                datasets: [{
+                    label: '粒子浓度',
+                    data: [80, 120, 95, 140, 100, 110, 85, 130],
+                    backgroundColor: (context) => {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return;
+                        
+                        const gradient = ctx.createRadialGradient(
+                            chartArea.width / 2,
+                            chartArea.height / 2,
+                            0,
+                            chartArea.width / 2,
+                            chartArea.height / 2,
+                            Math.min(chartArea.width, chartArea.height) / 2
+                        );
+                        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
+                        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+                        return gradient;
+                    },
+                    borderColor: '#6366f1',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#6366f1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { display: false },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { 
+                            display: false,
+                            stepSize: 50
+                        },
+                        pointLabels: { 
+                            color: '#9CA3AF',
+                            font: { size: 12 }
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 150
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // 化学因子波形图
+        const chemCtx = document.getElementById('chemicalChart').getContext('2d');
+        new Chart(chemCtx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 50}, (_, i) => i + 1),
+                datasets: [
+                    {
+                        label: '因子A',
+                        data: Array.from({length: 50}, () => Math.random() * 100),
+                        borderColor: '#10B981',
+                        borderWidth: 1,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: '因子B',
+                        data: Array.from({length: 50}, () => Math.random() * 80 + 20),
+                        borderColor: '#3B82F6',
+                        borderWidth: 1,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: '因子C',
+                        data: Array.from({length: 50}, () => Math.random() * 120 - 20),
+                        borderColor: '#F59E0B',
+                        borderWidth: 1,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        display: false,
+                        grid: { display: false }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#9CA3AF' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#E5E7EB' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
