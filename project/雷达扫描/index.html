@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>雷达扫描动画</title>
     <style>
+        /* 设置页面的基本样式 */
         body {
             margin: 0;
             padding: 0;
@@ -13,18 +15,24 @@
             align-items: center;
             min-height: 100vh;
             background-color: #0a192f;
+            /* 深蓝色背景 */
             font-family: Arial, sans-serif;
             color: #64ffda;
+            /* 青绿色字体颜色 */
             overflow: hidden;
+            /* 隐藏溢出的内容 */
         }
 
+        /* 容器样式 */
         .container {
             position: relative;
             width: 800px;
             height: 600px;
             background-color: #112240;
+            /* 深蓝色背景 */
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(100, 255, 218, 0.2);
+            /* 青绿色阴影 */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -32,6 +40,7 @@
             padding: 20px;
         }
 
+        /* 雷达容器样式 */
         .radar-container {
             position: relative;
             width: 400px;
@@ -39,25 +48,33 @@
             margin-bottom: 30px;
         }
 
+        /* 雷达背景样式 */
         .radar-bg {
             position: absolute;
             width: 400px;
             height: 400px;
             border-radius: 50%;
+            /* 圆形背景 */
             background-color: rgba(10, 25, 47, 0.8);
+            /* 半透明深蓝色 */
             border: 2px solid #64ffda;
+            /* 青绿色边框 */
             box-sizing: border-box;
         }
 
+        /* 雷达网格样式 */
         .radar-grid {
             position: absolute;
             width: 400px;
             height: 400px;
             border-radius: 50%;
+            /* 圆形网格 */
             background: radial-gradient(circle, transparent 0%, transparent 70%, rgba(100, 255, 218, 0.1) 70%, rgba(100, 255, 218, 0.1) 80%, transparent 80%, transparent 90%, rgba(100, 255, 218, 0.1) 90%);
         }
 
-        .radar-grid::before, .radar-grid::after {
+        /* 雷达网格的十字线 */
+        .radar-grid::before,
+        .radar-grid::after {
             content: '';
             position: absolute;
             top: 50%;
@@ -65,65 +82,114 @@
             width: 100%;
             height: 1px;
             background-color: rgba(100, 255, 218, 0.2);
+            /* 青绿色线条 */
             transform: translate(-50%, -50%);
         }
 
         .radar-grid::after {
             transform: translate(-50%, -50%) rotate(90deg);
+            /* 垂直线 */
         }
 
-        .radar-quarter {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 200px;
-            height: 200px;
-            overflow: hidden;
-            border-top-right-radius: 200px;
-        }
-
+        /* 雷达扫描器的初始状态 */
         .radar-scanner {
             position: absolute;
             top: 0;
-            right: 0;
-            width: 200px;
-            height: 200px;
-            transform-origin: bottom left;
-            background: linear-gradient(45deg, rgba(100, 255, 218, 0.8) 0%, rgba(100, 255, 218, 0.5) 100%);
+            left: 0;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            /* 圆形扫描区域 */
+            transform: rotate(0deg);
+            /* 初始角度为0 */
+            transform-origin: center;
+            /* 旋转中心为圆心 */
+            background: linear-gradient(to bottom, rgba(100, 255, 218, 0.8) 0%, rgba(100, 255, 218, 0) 100%);
             animation: none;
-            opacity: 0;
-            clip-path: polygon(0 0, 4px 0, 0 100px);
-            transition: clip-path 0.5s ease-out;
+            /* 初始无动画 */
+            opacity: 1;
+            clip-path: polygon(50% 50%, 49% 0, 51% 0%, 50% 50%);
+            /* 初始为指向正北的细指针 */
+            transition: none;
+            /* 无过渡效果 */
         }
 
+        /* 扫描旋转动画 */
         @keyframes scan {
             from {
                 transform: rotate(0deg);
             }
+
             to {
                 transform: rotate(360deg);
-            }
-        }
-        
-        @keyframes expand {
-            0% {
-                clip-path: polygon(0 0, 4px 0, 0 100px);
-            }
-            100% {
-                clip-path: polygon(0 0, 200px 0, 0 200px);
+                /* 完整旋转一圈 */
             }
         }
 
+        /* 扫描器扩展动画 */
+        @keyframes expand {
+            0% {
+                clip-path: polygon(50% 50%, 49% 0, 51% 0%, 50% 50%);
+                /* 初始为细指针 */
+            }
+
+            10% {
+                clip-path: polygon(50% 50%, 50% 0, 62% 0%, 50% 50%);
+                /* 逐渐扩展 */
+            }
+
+            20% {
+                clip-path: polygon(50% 50%, 50% 0, 72% 0%, 50% 50%);
+            }
+
+            30% {
+                clip-path: polygon(50% 50%, 50% 0, 82% 0%, 50% 50%);
+            }
+
+            40% {
+                clip-path: polygon(50% 50%, 50% 0, 92% 0%, 50% 50%);
+            }
+
+            50% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 0%);
+            }
+
+            60% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 10%);
+            }
+
+            70% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 20%);
+            }
+
+            80% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 30%);
+            }
+
+            90% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 40%);
+            }
+
+            100% {
+                clip-path: polygon(50% 50%, 50% 0, 100% 0%, 100% 50%);
+                /* 扩展为1/4圆 */
+            }
+        }
+
+        /* 动态生成的字符样式 */
         .character {
             position: absolute;
             font-size: 24px;
             font-weight: bold;
             color: #64ffda;
+            /* 青绿色字体 */
             text-shadow: 0 0 10px rgba(100, 255, 218, 0.8);
+            /* 发光效果 */
             opacity: 1;
             transition: opacity 0.3s;
         }
 
+        /* 计数器样式 */
         .counter {
             font-size: 36px;
             font-weight: bold;
@@ -135,10 +201,12 @@
             opacity: 0.7;
         }
 
+        /* 开始按钮样式 */
         .start-button {
             margin-top: 20px;
             padding: 15px 40px;
             background-color: #00b894;
+            /* 绿色背景 */
             color: white;
             border: none;
             border-radius: 30px;
@@ -146,158 +214,172 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);
+            /* 发光效果 */
         }
 
         .start-button:hover {
             background-color: #00d1a0;
+            /* 更亮的绿色 */
             box-shadow: 0 0 20px rgba(0, 209, 160, 0.7);
             transform: scale(1.05);
+            /* 放大效果 */
         }
 
         .start-button:active {
             transform: scale(0.95);
+            /* 点击时缩小 */
         }
     </style>
 </head>
+
 <body>
     <div class="container">
+        <!-- 雷达扫描区域 -->
         <div class="radar-container">
-            <div class="radar-bg"></div>
-            <div class="radar-grid"></div>
+            <div class="radar-bg"></div> <!-- 雷达背景 -->
+            <div class="radar-grid"></div> <!-- 雷达网格 -->
             <div class="radar-quarter">
-                <div class="radar-scanner" id="scanner"></div>
+                <div class="radar-scanner" id="scanner"></div> <!-- 扫描器 -->
             </div>
-            <!-- 字符将在这里动态生成 -->
         </div>
+        <!-- 扫描计数器 -->
         <div class="counter">
             <span id="current-count">0</span> / <span>10</span>
         </div>
+        <!-- 开始按钮 -->
         <button class="start-button" id="start-button">开始扫描</button>
     </div>
 
-    <audio id="button-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3" preload="auto"></audio>
+    <!-- 按钮点击音效 -->
+    <audio id="button-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3"
+        preload="auto"></audio>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const scanner = document.getElementById('scanner');
-            const radarContainer = document.querySelector('.radar-container');
-            const counter = document.getElementById('current-count');
-            const startButton = document.getElementById('start-button');
-            const buttonSound = document.getElementById('button-sound');
-            
-            let isScanning = false;
-            let scanCount = 0;
-            const characterPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?@#%&<>';
-            const characters = [];
-            
+        document.addEventListener('DOMContentLoaded', function () {
+            const scanner = document.getElementById('scanner'); // 扫描器元素
+            const radarContainer = document.querySelector('.radar-container'); // 雷达容器
+            const counter = document.getElementById('current-count'); // 当前计数器
+            const startButton = document.getElementById('start-button'); // 开始按钮
+            const buttonSound = document.getElementById('button-sound'); // 按钮音效
+
+            let isScanning = false; // 是否正在扫描
+            let scanCount = 0; // 当前扫描次数
+            const characterPool = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?@#%&<>'; // 随机字符池
+            const characters = []; // 存储生成的字符
+
             // 开始扫描
             function startScan() {
-                if (isScanning) return;
-                
-                buttonSound.play();
+                if (isScanning) return; // 如果正在扫描，则不执行
+
+                buttonSound.play(); // 播放按钮音效
                 isScanning = true;
                 scanCount = 0;
                 counter.textContent = scanCount;
-                
+
                 // 清除之前的字符
                 clearCharacters();
-                
-                // 设置扫描动画 - 先展开指针，然后开始旋转
-                scanner.style.opacity = '1';
-                scanner.style.animation = 'expand 1s ease-out forwards';
-                
-                // 等待指针展开后开始旋转
+
+                // 设置扫描动画 - 先从正北扩展到1/4圆的扇形
+                scanner.style.animation = 'expand 1s ease-out forwards'; // 使用动画扩展到1/4圆
+
+                // 等待指针扩展完成后开始旋转
                 setTimeout(() => {
-                    scanner.style.animation = 'scan 2s linear infinite';
+                    scanner.style.clipPath = "polygon(50% 50%, 50% 0, 100% 0%, 100% 50%)"
+                    scanner.style.animation = 'scan 3s linear infinite'; // 开始旋转
                     scanCycle();
                 }, 1000);
             }
-            
+
             // 扫描循环
             function scanCycle() {
                 if (scanCount >= 10) {
-                    stopScan();
+                    stopScan(); // 达到最大扫描次数后停止
                     return;
                 }
-                
+
                 // 每次扫描一圈后增加计数
                 setTimeout(() => {
                     scanCount++;
                     counter.textContent = scanCount;
-                    
+
                     // 清除之前的字符
                     clearCharacters();
-                    
+
                     // 生成新的随机字符
                     generateRandomCharacters();
-                    
+
                     // 继续下一圈扫描
                     if (scanCount < 10) {
                         scanCycle();
                     } else {
                         stopScan();
                     }
-                }, 2000); // 2秒一圈
+                }, 2000); // 每圈2秒
             }
-            
+
             // 停止扫描
             function stopScan() {
                 isScanning = false;
-                scanner.style.animation = 'none';
-                scanner.style.opacity = '0';
-                clearCharacters();
+                scanner.style.animation = 'none'; // 停止旋转
+                scanner.style.opacity = '0'; // 隐藏扫描器
+                clearCharacters(); // 清除字符
             }
-            
+
             // 清除字符
             function clearCharacters() {
                 characters.forEach(char => {
                     if (char.element && char.element.parentNode) {
-                        char.element.parentNode.removeChild(char.element);
+                        char.element.parentNode.removeChild(char.element); // 从DOM中移除字符
                     }
                 });
-                characters.length = 0;
+                characters.length = 0; // 清空字符数组
             }
-            
+
             // 生成随机字符
             function generateRandomCharacters() {
-                const numChars = Math.floor(Math.random() * 3) + 1; // 1-3个字符
-                const numberIndex = Math.floor(Math.random() * numChars); // 随机决定哪个位置是数字
-                
+                const numChars = Math.floor(Math.random() * 3) + 1; // 随机生成1-3个字符
+                const numberIndex = Math.floor(Math.random() * numChars); // 保底数字的位置
+
+                // 获取当前扫描的起始角度和结束角度
+                const currentAngle = (scanCount % 4) * 90; // 每次扫描增加90度
+                const startAngle = currentAngle; // 扇形起始角度
+                const endAngle = currentAngle + 90; // 扇形结束角度
+
                 for (let i = 0; i < numChars; i++) {
                     let char;
-                    
+
                     // 如果是指定的数字位置，则生成数字
                     if (i === numberIndex) {
-                        char = characterPool.substring(26, 36).charAt(Math.floor(Math.random() * 10)); // 只从数字中选择
+                        char = characterPool.substring(26, 36).charAt(Math.floor(Math.random() * 10)); // 从数字中选择
                     } else {
                         // 对于非数字位置，可以是任何字符
                         char = characterPool.charAt(Math.floor(Math.random() * characterPool.length));
                     }
-                    
-                    // 计算随机位置（在雷达的右上角四分之一区域内）
-                    const angle = Math.random() * 360; // 0-90度
-                    const distance = 50 + Math.random() * 150; // 距离中心50-150像素
-                    
+
+                    // 计算随机位置（在刚扫过的1/4扇形区域内）
+                    const angle = Math.random() * (endAngle - startAngle) + startAngle; // 随机角度在1/4圆内
+                    const distance = Math.random() * 200; // 距离中心0-200像素
+
                     // 转换为坐标
                     const radians = angle * (Math.PI / 180);
-                    const x = 200 + Math.cos(radians) * distance; // 200是雷达中心的x坐标
-                    const y = 200 - Math.sin(radians) * distance; // 200是雷达中心的y坐标，减去是因为y轴向下为正
-                    
+                    const x = 200 + Math.cos(radians) * distance; // 计算x坐标
+                    const y = 200 - Math.sin(radians) * distance; // 计算y坐标（注意y轴向下为正）
+
                     // 创建字符元素
                     const charElement = document.createElement('div');
                     charElement.className = 'character';
                     charElement.textContent = char;
                     charElement.style.left = `${x}px`;
                     charElement.style.top = `${y}px`;
-                    
+
                     // 添加到雷达容器
                     radarContainer.appendChild(charElement);
-                    
+
                     // 延迟显示字符，模拟扫描效果
                     setTimeout(() => {
                         charElement.style.opacity = '1';
-                    }, 500 * i);
-                    
+                    }, 8000 * i);
+
                     // 保存字符信息
                     characters.push({
                         element: charElement,
@@ -305,10 +387,11 @@
                     });
                 }
             }
-            
+
             // 绑定开始按钮事件
             startButton.addEventListener('click', startScan);
         });
     </script>
 </body>
+
 </html>
