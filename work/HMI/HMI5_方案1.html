@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024,height=600,user-scalable=no">
+    <title>TRIDETECT Pro 化学监测系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'Eurostile';
+            src: url('https://fonts.cdnfonts.com/css/eurostile-extended');
+        }
+
+        .status-ring {
+            background: conic-gradient(from -90deg,
+                    #10B981 0%,
+                    #10B981 var(--progress),
+                    #374151 var(--progress),
+                    #374151 100%);
+            transition: background 0.5s ease;
+        }
+
+        .alert-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .gas-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body class="h-[600px] w-[1024px] bg-gray-900 text-gray-100 font-['Eurostile'] overflow-hidden relative select-none">
+    <!-- 主状态显示 -->
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div class="relative w-96 h-96">
+            <!-- 状态环 -->
+            <div class="status-ring absolute inset-0 rounded-full" style="--progress: 85%"></div>
+
+            <!-- 中心显示 -->
+            <div class="absolute inset-8 rounded-full bg-gray-800 flex flex-col items-center justify-center">
+                <div class="text-7xl font-bold mb-2" id="comfort-level">优</div>
+                <div class="text-xl tracking-widest">环境舒适度</div>
+                <div class="mt-6 text-sm text-gray-400" id="sub-status">所有参数正常范围内</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 环境参数面板 -->
+    <div class="absolute top-8 left-8 w-64 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+        <div class="text-lg mb-4 flex justify-between items-center">
+            <span>环境参数</span>
+            <span class="text-xs text-gray-400">实时更新</span>
+        </div>
+
+        <div class="space-y-3">
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>温度</span>
+                    <span id="temp-value">25.8°C</span>
+                </div>
+                <div class="h-1 bg-gray-700 rounded-full">
+                    <div class="gas-bar h-full bg-blue-500 rounded-full" style="width: 65%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>湿度</span>
+                    <span id="humi-value">52.5%</span>
+                </div>
+                <div class="h-1 bg-gray-700 rounded-full">
+                    <div class="gas-bar h-full bg-blue-400 rounded-full" style="width: 52%"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>PM2.5</span>
+                    <span id="pm25-value">12μg/m³</span>
+                </div>
+                <div class="h-1 bg-gray-700 rounded-full">
+                    <div class="gas-bar h-full bg-green-500 rounded-full" style="width: 15%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex items-center justify-center space-x-2 text-2xl font-bold">
+        <span>AeroNBC</span>
+    </div>
+    <!-- 设备状态栏 -->
+    <div class="status-bar absolute w-[960px] top-4 right-8  flex items-center justify-end space-x-6">
+        <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span>在线</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <div class="w-6 h-3 border border-gray-400 rounded flex items-center px-px">
+                <div class="h-full bg-green-500 rounded-sm" style="width: 85%"></div>
+            </div>
+            <span>85%</span>
+        </div>
+        <div id="time-display" class="font-mono">14:23:45</div>
+    </div>
+
+    <!-- 底部控制栏 -->
+    <div class="absolute bottom-8 left-0 right-0 flex justify-center space-x-8">
+        <button class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-all"
+            onclick="showPanel('diagnostic')">
+            系统诊断
+        </button>
+        <button class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-all"
+            onclick="showPanel('history')">
+            事件记录
+        </button>
+        <button class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-all"
+            onclick="showPanel('settings')">
+            系统设置
+        </button>
+        <button class="px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded border border-gray-600 transition-all"
+            onclick="showPanel('allParams')">
+            全部参数
+        </button>
+        <!-- 测试按钮 -->
+        <button class="px-6 py-2 bg-blue-800 hover:bg-blue-700 rounded border border-blue-600 transition-all"
+            onclick="simulateRandomAlert()">
+            触发警报
+        </button>
+    </div>
+
+    <!-- 报警弹窗 (默认隐藏) -->
+    <div id="alert-overlay" class="hidden absolute inset-0 bg-red-900/80 flex items-center justify-center">
+        <div class="bg-gray-900 rounded-lg p-8 max-w-2xl border-2 border-red-500">
+            <div class="text-5xl font-bold mb-6 text-center alert-pulse">⚠️ 化学物质警报</div>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-800 p-4 rounded">
+                    <div class="text-sm text-gray-400 mb-2">检测物质</div>
+                    <div class="text-3xl font-mono" id="alert-gas-name">--</div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded">
+                    <div class="text-sm text-gray-400 mb-2">当前浓度</div>
+                    <div class="text-3xl font-mono" id="alert-gas-value">-- PPM</div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded">
+                    <div class="text-sm text-gray-400 mb-2">安全阈值</div>
+                    <div class="text-3xl font-mono" id="alert-gas-limit">-- PPM</div>
+                </div>
+
+                <div class="bg-gray-800 p-4 rounded">
+                    <div class="text-sm text-gray-400 mb-2">危险等级</div>
+                    <div class="text-3xl font-mono text-red-400" id="alert-gas-level">--</div>
+                </div>
+            </div>
+
+            <div class="flex justify-center space-x-6">
+                <button class="px-8 py-3 bg-red-600 hover:bg-red-700 rounded transition-all"
+                    onclick="handleEmergency('ventilation')">
+                    启动排风
+                </button>
+                <button class="px-8 py-3 bg-gray-700 hover:bg-gray-600 rounded transition-all" onclick="dismissAlert()">
+                    确认处理
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <!-- 诊断面板 (默认隐藏) -->
+    <div id="diagnostic" class="hidden absolute inset-0 bg-gray-900 p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold">系统诊断</h2>
+            <button class="px-4 py-1 bg-gray-800 rounded border border-gray-600"
+                onclick="hidePanel('diagnostic')">返回</button>
+        </div>
+
+        <!-- 硬件状态矩阵 -->
+        <div class="grid grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                <div class="flex justify-between mb-2">
+                    <span>化学模块</span>
+                    <span class="text-green-400">● 正常</span>
+                </div>
+                <div class="text-sm space-y-1">
+                    <div>PID传感器: <span class="text-green-400">在线</span></div>
+                    <div>采样泵: <span class="text-green-400">3000rpm</span></div>
+                    <div>气路压力: <span class="text-green-400">22kPa</span></div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                <div class="flex justify-between mb-2">
+                    <span>环境模块</span>
+                    <span class="text-green-400">● 正常</span>
+                </div>
+                <div class="text-sm space-y-1">
+                    <div>温湿度: <span class="text-green-400">校准</span></div>
+                    <div>颗粒物: <span class="text-green-400">0.3μm</span></div>
+                    <div>CO₂传感器: <span class="text-green-400">435ppm</span></div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
+                <div class="flex justify-between mb-2">
+                    <span>系统状态</span>
+                    <span class="text-green-400">● 运行</span>
+                </div>
+                <div class="text-sm space-y-1">
+                    <div>运行时长: <span class="text-green-400">127h</span></div>
+                    <div>存储空间: <span class="text-green-400">78%</span></div>
+                    <div>通讯状态: <span class="text-green-400">TCP连接</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 校准控制区 -->
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+            <h3 class="text-lg mb-4">校准程序</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="px-4 py-2 bg-blue-800/50 hover:bg-blue-700 rounded border border-blue-600"
+                    onclick="runCalibration('zero')">
+                    零点校准
+                </button>
+                <button class="px-4 py-2 bg-blue-800/50 hover:bg-blue-700 rounded border border-blue-600"
+                    onclick="runCalibration('span')">
+                    跨度校准
+                </button>
+                <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded border border-gray-600"
+                    onclick="runDiagnostic()">
+                    硬件自检
+                </button>
+                <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded border border-gray-600"
+                    onclick="showPanel('calibration-log')">
+                    校准记录
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- 历史记录面板 (默认隐藏) -->
+    <div id="history-panel" class="hidden absolute inset-0 bg-gray-900 p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold">事件记录</h2>
+            <button class="px-4 py-1 bg-gray-800 rounded border border-gray-600"
+                onclick="hidePanel('history-panel')">返回</button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex gap-4">
+                <button class="px-4 py-2 bg-blue-800/50 hover:bg-blue-700 rounded border border-blue-600"
+                    onclick="filterEvents('all')">全部</button>
+                <button class="px-4 py-2 bg-red-800/50 hover:bg-red-700 rounded border border-red-600"
+                    onclick="filterEvents('alert')">警报</button>
+                <button class="px-4 py-2 bg-yellow-800/50 hover:bg-yellow-700 rounded border border-yellow-600"
+                    onclick="filterEvents('warning')">警告</button>
+                <button class="px-4 py-2 bg-green-800/50 hover:bg-green-700 rounded border border-green-600"
+                    onclick="filterEvents('normal')">正常</button>
+            </div>
+
+            <div id="event-list" class="space-y-2 h-[400px] overflow-y-auto">
+                <!-- 事件记录将通过JavaScript动态插入 -->
+            </div>
+        </div>
+    </div>
+    <!-- 系统设置面板 (默认隐藏) -->
+    <div id="settings-panel" class="hidden absolute inset-0 bg-gray-900 p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold">系统设置</h2>
+            <button class="px-4 py-1 bg-gray-800 rounded border border-gray-600"
+                onclick="hidePanel('settings-panel')">返回</button>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-lg mb-4">报警阈值设置</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="temp-threshold" class="block mb-2">温度阈值 (°C)</label>
+                        <input type="number" id="temp-threshold" class="w-full bg-gray-700 rounded px-3 py-2"
+                            value="30">
+                    </div>
+                    <div>
+                        <label for="humi-threshold" class="block mb-2">湿度阈值 (%)</label>
+                        <input type="number" id="humi-threshold" class="w-full bg-gray-700 rounded px-3 py-2"
+                            value="80">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-lg mb-4">系统维护</h3>
+                <div class="space-y-2">
+                    <button class="w-full px-4 py-2 bg-blue-800/50 hover:bg-blue-700 rounded border border-blue-600"
+                        onclick="runSystemUpdate()">
+                        检查系统更新
+                    </button>
+                    <button class="w-full px-4 py-2 bg-blue-800/50 hover:bg-blue-700 rounded border border-blue-600"
+                        onclick="exportSystemLogs()">
+                        导出系统日志
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h3 class="text-lg mb-4">网络设置</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="server-address" class="block mb-2">服务器地址</label>
+                        <input type="text" id="server-address" class="w-full bg-gray-700 rounded px-3 py-2"
+                            value="https://example.com/api">
+                    </div>
+                    <button class="w-full px-4 py-2 bg-green-800/50 hover:bg-green-700 rounded border border-green-600"
+                        onclick="testConnection()">
+                        测试连接
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设备状态数据
+        const deviceStatus = {
+            comfort: "优",
+            temp: 25.8,
+            humi: 52.5,
+            pm25: 12,
+            battery: 85,
+            online: true,
+            alerts: []
+        };
+
+        // 毒气库阈值 (根据文档5/6)
+        const gasThresholds = {
+            "氟化氢": 3,
+            "二氧化硫": 5,
+            "氨气": 25,
+            "环氧乙烷": 1,
+            "沙林": 0.0001,
+            "维埃克斯": 0.00001,
+            // 其他气体...
+        };
+
+        // 初始化显示
+        function initDisplay() {
+            updateTime();
+            updateStatusDisplay();
+
+            // 模拟数据更新 (实际应用中替换为真实数据接口)
+            setInterval(updateTime, 1000);
+            setInterval(updateStatusDisplay, 3000);
+        }
+
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:` +
+                `${now.getMinutes().toString().padStart(2, '0')}:` +
+                `${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('time-display').textContent = timeStr;
+        }
+
+        // 更新状态显示
+        function updateStatusDisplay() {
+            // 更新舒适度
+            document.getElementById('comfort-level').textContent = deviceStatus.comfort;
+
+            // 更新环境参数
+            document.getElementById('temp-value').textContent = `${deviceStatus.temp.toFixed(1)}°C`;
+            document.getElementById('humi-value').textContent = `${deviceStatus.humi.toFixed(1)}%`;
+            document.getElementById('pm25-value').textContent = `${deviceStatus.pm25}μg/m³`;
+
+            // 更新状态环 (根据警报数量)
+            const ring = document.querySelector('.status-ring');
+            const alertCount = deviceStatus.alerts.length;
+            const progress = alertCount > 0 ? '30%' : '85%';
+            ring.style.setProperty('--progress', progress);
+
+            // 如果有警报，更新显示
+            if (alertCount > 0) {
+                document.getElementById('comfort-level').textContent = "危";
+                document.getElementById('comfort-level').className = "text-7xl font-bold mb-2 text-red-500";
+                document.getElementById('sub-status').textContent = `${alertCount}项参数异常`;
+                document.getElementById('sub-status').className = "mt-6 text-sm text-red-400";
+
+                // 显示第一个警报
+                showGasAlert(deviceStatus.alerts[0]);
+            } else {
+                document.getElementById('comfort-level').className = "text-7xl font-bold mb-2 text-green-400";
+                document.getElementById('sub-status').textContent = "所有参数正常范围内";
+                document.getElementById('sub-status').className = "mt-6 text-sm text-gray-400";
+            }
+        }
+
+        // 显示气体警报
+        function showGasAlert(alert) {
+            document.getElementById('alert-gas-name').textContent = alert.gas;
+            document.getElementById('alert-gas-value').textContent = `${alert.value.toFixed(4)} PPM`;
+            document.getElementById('alert-gas-limit').textContent = `${alert.threshold} PPM`;
+
+            // 计算危险等级
+            const ratio = alert.value / alert.threshold;
+            let level = "I";
+            if (ratio > 10) level = "IV";
+            else if (ratio > 5) level = "III";
+            else if (ratio > 2) level = "II";
+
+            document.getElementById('alert-gas-level').textContent = level;
+            document.getElementById('alert-overlay').classList.remove('hidden');
+            addEventRecord('alert', `检测到${alert.gas}超标：${alert.value.toFixed(4)} PPM（阈值：${alert.threshold} PPM）`);
+        }
+
+        // 解除警报
+        function dismissAlert() {
+            document.getElementById('alert-overlay').classList.add('hidden');
+        }
+
+        // 应急处理
+        function handleEmergency(action) {
+            if (action === 'ventilation') {
+                addEventRecord('normal', '已启动紧急排风系统');
+                // 这里可以添加控制通风系统的代码
+                console.log("启动排风系统");
+            }
+            dismissAlert();
+        }
+
+        // 显示面板
+        function showPanel(panel) {
+            // 隐藏所有面板
+            document.getElementById('diagnostic').classList.add('hidden');
+            document.getElementById('history-panel').classList.add('hidden');
+            document.getElementById('settings-panel').classList.add('hidden');
+
+            // 显示选中的面板
+            if (panel === 'history') {
+                document.getElementById('history-panel').classList.remove('hidden');
+                updateEventList();
+            } else if (panel === 'diagnostic') {
+                document.getElementById('diagnostic').classList.remove('hidden');
+            } else if (panel === 'settings') {
+                document.getElementById('settings-panel').classList.remove('hidden');
+            }
+        }
+
+        // 隐藏面板
+        function hidePanel(panelId) {
+            document.getElementById(panelId).classList.add('hidden');
+        }
+
+        // 初始化
+        window.onload = function () {
+            initDisplay();
+            addEventRecord('normal', '系统启动完成');
+            addEventRecord('warning', '环境温度偏高：28.5°C');
+            addEventRecord('alert', '检测到氨气超标：30 PPM（阈值：25 PPM）');
+        }
+
+        // 事件记录数组
+        const eventHistory = [];
+
+        // 添加事件记录
+        function addEventRecord(type, message) {
+            const event = {
+                type,
+                message,
+                timestamp: new Date().toISOString()
+            };
+            eventHistory.unshift(event);
+            updateEventList();
+        }
+
+        // 更新事件列表显示
+        function updateEventList(filter = 'all') {
+            const eventList = document.getElementById('event-list');
+            eventList.innerHTML = '';
+
+            const filteredEvents = filter === 'all'
+                ? eventHistory
+                : eventHistory.filter(e => e.type === filter);
+
+            filteredEvents.forEach(event => {
+                const date = new Date(event.timestamp);
+                const timeStr = date.toLocaleTimeString();
+
+                const colorClass = {
+                    'alert': 'bg-red-900/50 border-red-700',
+                    'warning': 'bg-yellow-900/50 border-yellow-700',
+                    'normal': 'bg-green-900/50 border-green-700'
+                }[event.type] || 'bg-gray-800/50 border-gray-700';
+
+                eventList.innerHTML += `
+                    <div class="p-3 rounded ${colorClass} border">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-400">${timeStr}</span>
+                            <span class="text-xs px-2 py-1 rounded-full ${colorClass}">${event.type}</span>
+                        </div>
+                        <div class="mt-1">${event.message}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // 筛选事件
+        function filterEvents(type) {
+            updateEventList(type);
+        }
+
+        // 系统更新
+        function runSystemUpdate() {
+            addEventRecord('normal', '正在检查系统更新...');
+            // 这里添加实际的系统更新逻辑
+            setTimeout(() => {
+                addEventRecord('normal', '系统已是最新版本');
+            }, 2000);
+        }
+
+        // 导出系统日志
+        function exportSystemLogs() {
+            addEventRecord('normal', '正在导出系统日志...');
+            // 这里添加实际的日志导出逻辑
+            setTimeout(() => {
+                addEventRecord('normal', '系统日志已导出');
+            }, 1500);
+        }
+
+        // 测试连接
+        function testConnection() {
+            const serverAddress = document.getElementById('server-address').value;
+            addEventRecord('normal', `正在测试连接到 ${serverAddress}...`);
+            // 这里添加实际的连接测试逻辑
+            setTimeout(() => {
+                addEventRecord('normal', '连接测试成功');
+            }, 1000);
+        }
+
+        // /​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​
+        //  * 以下为模拟数据生成函数 - 实际应用中应替换为真实数据接口调用
+        //  ​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​​**​/
+
+        // 模拟随机警报 (测试用)
+        function simulateRandomAlert() {
+            const gases = Object.keys(gasThresholds);
+            const randomGas = gases[Math.floor(Math.random() * gases.length)];
+
+            const alert = {
+                gas: randomGas,
+                value: gasThresholds[randomGas] * (1 + Math.random() * 10),
+                threshold: gasThresholds[randomGas]
+            };
+
+            deviceStatus.alerts = [alert];
+            deviceStatus.comfort = "危";
+
+            updateStatusDisplay();
+        }
+
+        // 测试按钮 - 实际应用中移除
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 't') simulateRandomAlert();
+            if (e.key === 'r') {
+                deviceStatus.alerts = [];
+                deviceStatus.comfort = "优";
+                updateStatusDisplay();
+            }
+        });
+    </script>
+</body>
+
+</html>
