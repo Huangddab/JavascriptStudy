@@ -331,28 +331,6 @@
         </div>
     </div>
 
-    <!-- 全部参数面板 (默认隐藏) -->
-    <div id="allParams-panel" class="hidden absolute inset-0 bg-gray-900 p-8">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-bold">全部参数</h2>
-            <button class="px-4 py-1 bg-gray-800 rounded border border-gray-600"
-                onclick="hidePanel('allParams-panel')">返回</button>
-        </div>
-
-        <!-- Example parameters (Add relevant information) -->
-        <div class="space-y-4">
-            <div class="bg-gray-800/50 p-4 rounded border border-gray-700">
-                <h3 class="text-lg mb-4">参数详情</h3>
-                <div class="text-sm space-y-2">
-                    <div>温度阈值: <span id="param-temp-threshold">30°C</span></div>
-                    <div>湿度阈值: <span id="param-humi-threshold">80%</span></div>
-                    <div>当前服务器地址: <span id="param-server-address">https://example.com/api</span></div>
-                    <!-- Add more parameters as needed -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         // 设备状态数据
         const deviceStatus = {
@@ -466,7 +444,6 @@
             document.getElementById('diagnostic').classList.add('hidden');
             document.getElementById('history-panel').classList.add('hidden');
             document.getElementById('settings-panel').classList.add('hidden');
-            document.getElementById('allParams-panel').classList.add('hidden');
 
             // 显示选中的面板
             if (panel === 'history') {
@@ -476,19 +453,7 @@
                 document.getElementById('diagnostic').classList.remove('hidden');
             } else if (panel === 'settings') {
                 document.getElementById('settings-panel').classList.remove('hidden');
-            } else if (panel === 'allParams') {
-                document.getElementById('allParams-panel').classList.remove('hidden');
-                updateAllParamsPanel();
             }
-        }
-
-        // 更新全部参数面板
-        function updateAllParamsPanel() {
-            // Update the parameters dynamically if needed
-            document.getElementById('param-temp-threshold').textContent = document.getElementById('temp-threshold').value;
-            document.getElementById('param-humi-threshold').textContent = document.getElementById('humi-threshold').value;
-            document.getElementById('param-server-address').textContent = document.getElementById('server-address').value;
-            // Add more updates here
         }
 
         // 隐藏面板
